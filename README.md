@@ -1,13 +1,11 @@
 # Pengolahan Citra Digital (D)
 
-A Python project covering "Operasi Titik", "Operasi Geometri", "Operasi Multi
-Citra", and "Operasi Global" from an Pengolahan Citra course.
-
+A Python project for image and multi-image operations, with a Tkinter GUI as the interface.
+e.g. changing brightness, contrast, cropping, flipping, rotating, scaling, history equalization, etc.
 Only supports `.bmp` and `.png` files based on the `imagelib` module.
 
 ## Usage
 
-The operations can only be accessed by a Tkinter GUI for ease of use.
 Before being able to run any of the project's modules, run:
 
 ```
