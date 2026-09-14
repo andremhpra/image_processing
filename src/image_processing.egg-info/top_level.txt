@@ -1,6 +1,0 @@
-describe_bmp
-imagelib
-main_gui
-operasi_global
-operasi_multi_citra
-operasi_titik_geometri
