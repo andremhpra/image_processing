@@ -1,0 +1,21 @@
+[project]
+name = "image-processing"
+version = "0.1.0"
+description = "GUI image processing lab: from-scratch BMP/PNG I/O plus point, geometric, multi-image, and global operations."
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+gui = "gui.app:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.9"
+typeCheckingMode = "standard"
