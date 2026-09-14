@@ -6,7 +6,7 @@ Run with `gui` (console script) or `python -m gui.app`.
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, scrolledtext, ttk
-from typing import Optional
+from typing import Optional, cast
 
 import imagelib
 from describe_bmp import describe_image
@@ -238,13 +238,19 @@ class App(tk.Tk):
 		if any(image is None for image in self.input_images):
 			messagebox.showwarning("Missing input", "Load all required input image(s) first.")
 			return
+		images = cast(list[Image], self.input_images)  # narrowed: the check above ruled out None
+
+		if self.operation.describe_size_mismatch is not None and len(images) == 2:
+			message = self.operation.describe_size_mismatch(*images)
+			if message is not None:
+				messagebox.showwarning("Different image sizes", message)
 		try:
 			params = self._collect_params()
 		except ValueError as exc:
 			messagebox.showerror("Invalid parameter", f"Check the operation's parameters: {exc}")
 			return
 		try:
-			self.result_image = self.operation.run(*self.input_images, **params)
+			self.result_image = self.operation.run(*images, **params)
 		except Exception as exc:
 			messagebox.showerror("Operation failed", str(exc))
 			return

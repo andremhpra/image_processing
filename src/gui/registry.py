@@ -9,11 +9,20 @@ entry, not a special case wired into the UI.
 """
 
 from dataclasses import dataclass, field
-from typing import Callable, Sequence, Union
+from typing import Callable, Optional, Sequence, Union
 
 from imagelib.image import Image
 from operasi_global import equalize_histogram
-from operasi_multi_citra import blend, detect_motion, logic_and, logic_not, logic_or, logic_sub, logic_xor
+from operasi_multi_citra import (
+	blend,
+	describe_motion_size_mismatch,
+	detect_motion,
+	logic_and,
+	logic_not,
+	logic_or,
+	logic_sub,
+	logic_xor,
+)
 from operasi_titik_geometri import (
 	adjust_brightness,
 	crop,
@@ -67,6 +76,12 @@ class Operation:
 	"""The function to call with the input image(s) and collected params."""
 	params: Sequence[Param] = field(default_factory=tuple)
 	"""The extra (non-image) parameters this operation takes, if any."""
+	describe_size_mismatch: Optional[Callable[[Image, Image], Optional[str]]] = None
+	"""For a 2-input operation that tolerates differently sized inputs: given
+	the two loaded images, returns a warning message describing how they'll
+	be reconciled, or None if they're already the same size. The GUI shows
+	this (if non-None) before running. Operations that require same-sized
+	inputs leave this unset."""
 
 
 _FLIPS: dict[str, Callable[[Image], Image]] = {
@@ -226,6 +241,7 @@ OPERATIONS: list[Operation] = [
 		"Operasi Multi Citra",
 		2,
 		detect_motion,
+		describe_size_mismatch=describe_motion_size_mismatch,
 	),
 	Operation(
 		"logic_and",
