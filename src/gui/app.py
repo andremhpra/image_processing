@@ -48,7 +48,7 @@ class App(tk.Tk):
 	def __init__(self) -> None:
 		"""Build the window and select the first registered operation."""
 		super().__init__()
-		self.title("Image Operations Lab")
+		self.title("Operasi Citra Digital")
 
 		self.operation: Operation = OPERATIONS[0]
 		self.input_images: list[Optional[Image]] = []
