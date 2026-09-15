@@ -2,7 +2,8 @@
 
 from typing import Optional
 
-from imagelib.image import Coordinate, Image, PixelValue, as_gray, as_rgb
+from imagelib.image import Image, PixelValue, as_gray, as_rgb
+from operasi_multi_citra._util import center_offsets, pixel_or
 
 
 def blend(image_a: Image, image_b: Image, weight_a: float = 0.5) -> Image:
@@ -36,26 +37,15 @@ def blend(image_a: Image, image_b: Image, weight_a: float = 0.5) -> Image:
 		)
 
 	weight_b = 1 - weight_a
-	if image_a.size == image_b.size:
-		canvas_size = image_a.size
-		offset_a: Coordinate = (0, 0)
-		offset_b: Coordinate = (0, 0)
-	elif image_a.width * image_a.height >= image_b.width * image_b.height:
-		canvas_size = image_a.size
-		offset_a = (0, 0)
-		offset_b = ((image_a.width - image_b.width) // 2, (image_a.height - image_b.height) // 2)
-	else:
-		canvas_size = image_b.size
-		offset_b = (0, 0)
-		offset_a = ((image_b.width - image_a.width) // 2, (image_b.height - image_a.height) // 2)
+	canvas_size, offset_a, offset_b = center_offsets(image_a, image_b)
 
 	out = Image(image_a.mode, canvas_size, image_a.bits_per_channel)
 	max_value = image_a.max_value
 	width, height = canvas_size
 	for y in range(height):
 		for x in range(width):
-			a = _pixel_or_none(image_a, (x - offset_a[0], y - offset_a[1]))
-			b = _pixel_or_none(image_b, (x - offset_b[0], y - offset_b[1]))
+			a = pixel_or(image_a, (x - offset_a[0], y - offset_a[1]))
+			b = pixel_or(image_b, (x - offset_b[0], y - offset_b[1]))
 			if a is not None and b is not None:
 				out.putpixel((x, y), _blend_pixel(image_a.mode, a, b, weight_a, weight_b, max_value))
 			elif a is not None:
@@ -78,33 +68,13 @@ def describe_size_mismatch(image_a: Image, image_b: Image) -> Optional[str]:
 	"""
 	if image_a.size == image_b.size:
 		return None
-	if image_a.width * image_a.height >= image_b.width * image_b.height:
-		canvas_width, canvas_height = image_a.size
-	else:
-		canvas_width, canvas_height = image_b.size
+	canvas_width, canvas_height = center_offsets(image_a, image_b)[0]
 	return (
 		f"Image A is {image_a.width}x{image_a.height} and Image B is {image_b.width}x{image_b.height}.\n\n"
 		f"The smaller image will be centered on a canvas the size of the larger ({canvas_width}x{canvas_height}); "
 		"the weighted mix only applies where the two overlap, and the bigger image's pixels show through "
 		"everywhere else."
 	)
-
-
-def _pixel_or_none(image: Image, xy: Coordinate) -> Optional[PixelValue]:
-	"""Read a pixel, or `None` if `xy` falls outside `image`'s bounds.
-
-	Args:
-		image: The image to read from.
-		xy: Pixel coordinate as an (x, y) tuple, possibly out of bounds.
-
-	Returns:
-		`image.getpixel(xy)`, or `None` if `xy` is outside `image`.
-	"""
-	x, y = xy
-	width, height = image.size
-	if 0 <= x < width and 0 <= y < height:
-		return image.getpixel((x, y))
-	return None
 
 
 def _blend_pixel(

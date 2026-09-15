@@ -9,7 +9,8 @@ depth the inputs were.
 
 from typing import Callable, Optional
 
-from imagelib.image import Coordinate, Image, Size, as_gray
+from imagelib.image import Image, as_gray
+from operasi_multi_citra._util import center_offsets, pixel_or
 from operasi_titik.thresholding import threshold_single
 
 
@@ -126,7 +127,7 @@ def describe_size_mismatch(image_a: Image, image_b: Image) -> Optional[str]:
 	"""
 	if image_a.size == image_b.size:
 		return None
-	canvas_width, canvas_height = _max_size(image_a, image_b)
+	canvas_width, canvas_height = center_offsets(image_a, image_b)[0]
 	return (
 		f"Image A is {image_a.width}x{image_a.height} and Image B is {image_b.width}x{image_b.height}.\n\n"
 		f"The smaller image will be centered on a canvas the size of the larger ({canvas_width}x{canvas_height}); "
@@ -153,56 +154,13 @@ def _combine(image_a: Image, image_b: Image, op: Callable[[int, int], int]) -> I
 	binary_a = threshold_single(image_a, image_a.levels // 2)
 	binary_b = threshold_single(image_b, image_b.levels // 2)
 
-	if binary_a.size == binary_b.size:
-		canvas_size = binary_a.size
-		offset_a: Coordinate = (0, 0)
-		offset_b: Coordinate = (0, 0)
-	elif binary_a.width * binary_a.height >= binary_b.width * binary_b.height:
-		canvas_size = binary_a.size
-		offset_a = (0, 0)
-		offset_b = ((binary_a.width - binary_b.width) // 2, (binary_a.height - binary_b.height) // 2)
-	else:
-		canvas_size = binary_b.size
-		offset_b = (0, 0)
-		offset_a = ((binary_b.width - binary_a.width) // 2, (binary_b.height - binary_a.height) // 2)
+	canvas_size, offset_a, offset_b = center_offsets(binary_a, binary_b)
 
 	out = Image("L", canvas_size, binary_a.bits_per_channel)
 	width, height = canvas_size
 	for y in range(height):
 		for x in range(width):
-			a = _pixel_or_black(binary_a, (x - offset_a[0], y - offset_a[1]))
-			b = _pixel_or_black(binary_b, (x - offset_b[0], y - offset_b[1]))
+			a = as_gray(pixel_or(binary_a, (x - offset_a[0], y - offset_a[1]), 0))
+			b = as_gray(pixel_or(binary_b, (x - offset_b[0], y - offset_b[1]), 0))
 			out.putpixel((x, y), op(a, b))
 	return out
-
-
-def _max_size(image_a: Image, image_b: Image) -> Size:
-	"""The larger of the two images' sizes, by pixel area.
-
-	Args:
-		image_a: The first image.
-		image_b: The second image.
-
-	Returns:
-		`image_a.size` if it has at least as many pixels as `image_b`, else `image_b.size`.
-	"""
-	if image_a.width * image_a.height >= image_b.width * image_b.height:
-		return image_a.size
-	return image_b.size
-
-
-def _pixel_or_black(image: Image, xy: Coordinate) -> int:
-	"""Read a binarized (mode `"L"`) pixel, or 0 (black) if `xy` falls outside `image`.
-
-	Args:
-		image: The (already binarized, mode `"L"`) image to read from.
-		xy: Pixel coordinate as an (x, y) tuple, possibly out of bounds.
-
-	Returns:
-		`image.getpixel(xy)`, or `0` if `xy` is outside `image`.
-	"""
-	x, y = xy
-	width, height = image.size
-	if 0 <= x < width and 0 <= y < height:
-		return as_gray(image.getpixel((x, y)))
-	return 0
