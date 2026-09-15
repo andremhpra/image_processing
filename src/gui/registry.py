@@ -15,6 +15,8 @@ from imagelib.image import Image
 from operasi_global import equalize_histogram
 from operasi_multi_citra import (
 	blend,
+	describe_blend_size_mismatch,
+	describe_logic_size_mismatch,
 	describe_motion_size_mismatch,
 	detect_motion,
 	logic_and,
@@ -234,6 +236,7 @@ OPERATIONS: list[Operation] = [
 		2,
 		_blend,
 		[Param("wa", "Weight for image A", "float", 0.5)],
+		describe_size_mismatch=describe_blend_size_mismatch,
 	),
 	Operation(
 		"motion_detection",
@@ -249,6 +252,7 @@ OPERATIONS: list[Operation] = [
 		"Operasi Multi Citra",
 		2,
 		logic_and,
+		describe_size_mismatch=describe_logic_size_mismatch,
 	),
 	Operation(
 		"logic_or",
@@ -256,6 +260,7 @@ OPERATIONS: list[Operation] = [
 		"Operasi Multi Citra",
 		2,
 		logic_or,
+		describe_size_mismatch=describe_logic_size_mismatch,
 	),
 	Operation(
 		"logic_xor",
@@ -263,6 +268,7 @@ OPERATIONS: list[Operation] = [
 		"Operasi Multi Citra",
 		2,
 		logic_xor,
+		describe_size_mismatch=describe_logic_size_mismatch,
 	),
 	Operation(
 		"logic_sub",
@@ -270,6 +276,7 @@ OPERATIONS: list[Operation] = [
 		"Operasi Multi Citra",
 		2,
 		logic_sub,
+		describe_size_mismatch=describe_logic_size_mismatch,
 	),
 	Operation(
 		"logic_not",
