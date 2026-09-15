@@ -13,7 +13,7 @@ def flip_horizontal(image: Image) -> Image:
 		A new image, same mode and size as `image`, mirrored left-to-right.
 	"""
 	width, height = image.size
-	out = Image(image.mode, image.size)
+	out = Image(image.mode, image.size, image.bits_per_channel)
 	for y in range(height):
 		for x in range(width):
 			out.putpixel((width - 1 - x, y), image.getpixel((x, y)))
@@ -30,7 +30,7 @@ def flip_vertical(image: Image) -> Image:
 		A new image, same mode and size as `image`, mirrored top-to-bottom.
 	"""
 	width, height = image.size
-	out = Image(image.mode, image.size)
+	out = Image(image.mode, image.size, image.bits_per_channel)
 	for y in range(height):
 		for x in range(width):
 			out.putpixel((x, height - 1 - y), image.getpixel((x, y)))
@@ -47,7 +47,7 @@ def flip_combined(image: Image) -> Image:
 		A new image, same mode and size as `image`, mirrored both ways.
 	"""
 	width, height = image.size
-	out = Image(image.mode, image.size)
+	out = Image(image.mode, image.size, image.bits_per_channel)
 	for y in range(height):
 		for x in range(width):
 			out.putpixel((width - 1 - x, height - 1 - y), image.getpixel((x, y)))

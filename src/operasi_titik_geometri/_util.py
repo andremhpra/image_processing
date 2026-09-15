@@ -36,7 +36,7 @@ def apply_point_op(image: Image, fn: Callable[[int], float]) -> Image:
 		A new image, same mode and size as `image`, with `fn` applied to
 		every channel of every pixel.
 	"""
-	out = Image(image.mode, image.size)
+	out = Image(image.mode, image.size, image.bits_per_channel)
 	max_value = image.max_value
 	width, height = image.size
 	for y in range(height):

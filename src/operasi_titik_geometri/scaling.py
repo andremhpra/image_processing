@@ -24,7 +24,7 @@ def scale(image: Image, sh: float, sv: float) -> Image:
 	new_width = max(round(width * sh), 1)
 	new_height = max(round(height * sv), 1)
 
-	out = Image(image.mode, (new_width, new_height))
+	out = Image(image.mode, (new_width, new_height), image.bits_per_channel)
 	for ny in range(new_height):
 		source_y = min(height - 1, int(ny / sv))
 		for nx in range(new_width):

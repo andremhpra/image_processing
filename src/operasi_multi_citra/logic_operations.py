@@ -1,119 +1,118 @@
-"""Operasi Logika (logic operations): bitwise AND/OR/XOR/NOT plus a clamped SUB, applied per pixel."""
+"""Operasi Logika (logic operations): bitwise AND/OR/XOR/NOT plus a clamped SUB.
+
+Each input is binarized first - converted to grayscale (if not already) and
+thresholded to black/white - so every one of these operations always
+produces a genuinely 1-bit image: every output pixel is either 0 (black) or
+1 (white), never something in between, and regardless of what mode or bit
+depth the inputs were.
+"""
 
 from typing import Callable, Optional
 
-from imagelib.image import Coordinate, Image, PixelValue, Size, as_gray, as_rgb
+from imagelib.image import Coordinate, Image, Size, as_gray
+from operasi_titik_geometri.thresholding import threshold_single
+
+_THRESHOLD = 128
+"""Gray level used to binarize each input before combining (see `threshold_single`)."""
 
 
 def logic_and(image_a: Image, image_b: Image) -> Image:
-	"""Bitwise AND of each corresponding pair of 8-bit channel values.
+	"""Logical AND of two images, each binarized first.
 
-	If the images differ in size, the result takes the size of the bigger
-	one (by pixel area) and the smaller image is centered on top of it;
-	pixels outside the smaller image's footprint are treated as 0 (black)
-	for the AND.
+	If the (binarized) images differ in size, the result takes the size of
+	the bigger one (by pixel area) and the smaller image is centered on top
+	of it; pixels outside the smaller image's footprint are treated as 0
+	(black) for the AND.
 
 	Args:
-		image_a: The first image; same mode as `image_b`.
-		image_b: The second image; same mode as `image_a`.
+		image_a: The first image; any mode.
+		image_b: The second image; any mode.
 
 	Returns:
-		A new image, same mode as the inputs and sized to the larger input,
-		with C = A AND B.
-
-	Raises:
-		ValueError: If `image_a` and `image_b` differ in mode.
+		A new 1-bit mode `"L"` image, sized to the larger input, containing
+		only 0 and 1, with C = A AND B.
 	"""
 	return _combine(image_a, image_b, lambda a, b: a & b)
 
 
 def logic_or(image_a: Image, image_b: Image) -> Image:
-	"""Bitwise OR of each corresponding pair of 8-bit channel values.
+	"""Logical OR of two images, each binarized first.
 
-	If the images differ in size, the result takes the size of the bigger
-	one (by pixel area) and the smaller image is centered on top of it;
-	pixels outside the smaller image's footprint are treated as 0 (black)
-	for the OR.
+	If the (binarized) images differ in size, the result takes the size of
+	the bigger one (by pixel area) and the smaller image is centered on top
+	of it; pixels outside the smaller image's footprint are treated as 0
+	(black) for the OR.
 
 	Args:
-		image_a: The first image; same mode as `image_b`.
-		image_b: The second image; same mode as `image_a`.
+		image_a: The first image; any mode.
+		image_b: The second image; any mode.
 
 	Returns:
-		A new image, same mode as the inputs and sized to the larger input,
-		with C = A OR B.
-
-	Raises:
-		ValueError: If `image_a` and `image_b` differ in mode.
+		A new 1-bit mode `"L"` image, sized to the larger input, containing
+		only 0 and 1, with C = A OR B.
 	"""
 	return _combine(image_a, image_b, lambda a, b: a | b)
 
 
 def logic_xor(image_a: Image, image_b: Image) -> Image:
-	"""Bitwise XOR of each corresponding pair of 8-bit channel values.
+	"""Logical XOR of two images, each binarized first.
 
-	If the images differ in size, the result takes the size of the bigger
-	one (by pixel area) and the smaller image is centered on top of it;
-	pixels outside the smaller image's footprint are treated as 0 (black)
-	for the XOR.
+	If the (binarized) images differ in size, the result takes the size of
+	the bigger one (by pixel area) and the smaller image is centered on top
+	of it; pixels outside the smaller image's footprint are treated as 0
+	(black) for the XOR.
 
 	Args:
-		image_a: The first image; same mode as `image_b`.
-		image_b: The second image; same mode as `image_a`.
+		image_a: The first image; any mode.
+		image_b: The second image; any mode.
 
 	Returns:
-		A new image, same mode as the inputs and sized to the larger input,
-		with C = A XOR B.
-
-	Raises:
-		ValueError: If `image_a` and `image_b` differ in mode.
+		A new 1-bit mode `"L"` image, sized to the larger input, containing
+		only 0 and 1, with C = A XOR B.
 	"""
 	return _combine(image_a, image_b, lambda a, b: a ^ b)
 
 
 def logic_sub(image_a: Image, image_b: Image) -> Image:
-	"""A - B where A >= B, 0 otherwise (the assignment's SUB operator, unlike plain subtraction).
+	"""A AND (NOT B): image_a's binarized white region minus image_b's.
 
-	If the images differ in size, the result takes the size of the bigger
-	one (by pixel area) and the smaller image is centered on top of it;
-	pixels outside the smaller image's footprint are treated as 0 (black)
-	for the subtraction.
+	Computed as `A - B` where `A >= B`, `0` otherwise (the assignment's SUB
+	operator, unlike plain subtraction); on binarized 0/1 inputs this is
+	equivalent to "A's white region with B's white region removed".
+
+	If the (binarized) images differ in size, the result takes the size of
+	the bigger one (by pixel area) and the smaller image is centered on top
+	of it; pixels outside the smaller image's footprint are treated as 0
+	(black) for the subtraction.
 
 	Args:
-		image_a: The first image; same mode as `image_b`.
-		image_b: The second image; same mode as `image_a`.
+		image_a: The first image; any mode.
+		image_b: The second image; any mode.
 
 	Returns:
-		A new image, same mode as the inputs and sized to the larger input,
-		with C = A - B (or 0).
-
-	Raises:
-		ValueError: If `image_a` and `image_b` differ in mode.
+		A new 1-bit mode `"L"` image, sized to the larger input, containing
+		only 0 and 1, with C = A - B (or 0).
 	"""
 	return _combine(image_a, image_b, lambda a, b: a - b if a >= b else 0)
 
 
 def logic_not(image: Image) -> Image:
-	"""Bitwise complement of each channel value.
+	"""Logical NOT of a binarized image.
 
 	Args:
-		image: The source image; mode `"L"` or `"RGB"`.
+		image: The source image; any mode.
 
 	Returns:
-		A new image, same mode and size as `image`, with C = NOT A
-		(`image.max_value` - A).
+		A new 1-bit mode `"L"` image, same size as `image`, containing only 0
+		and 1, with C = NOT A.
 	"""
-	out = Image(image.mode, image.size)
-	max_value = image.max_value
-	width, height = image.size
+	binary = threshold_single(image, _THRESHOLD)
+	out = Image("L", binary.size, binary.bits_per_channel)
+	max_value = binary.max_value
+	width, height = binary.size
 	for y in range(height):
 		for x in range(width):
-			value = image.getpixel((x, y))
-			if image.mode == "L":
-				out.putpixel((x, y), max_value - as_gray(value))
-			else:
-				r, g, b = as_rgb(value)
-				out.putpixel((x, y), (max_value - r, max_value - g, max_value - b))
+			out.putpixel((x, y), max_value - as_gray(binary.getpixel((x, y))))
 	return out
 
 
@@ -139,7 +138,7 @@ def describe_size_mismatch(image_a: Image, image_b: Image) -> Optional[str]:
 
 
 def _combine(image_a: Image, image_b: Image, op: Callable[[int, int], int]) -> Image:
-	"""Apply a binary per-channel operator to each corresponding pair of pixels.
+	"""Binarize both images, then apply a binary operator to each corresponding pair of pixels.
 
 	If the images differ in size, the result takes the size of the bigger
 	one (by pixel area) and the smaller image is centered on top of it:
@@ -147,45 +146,37 @@ def _combine(image_a: Image, image_b: Image, op: Callable[[int, int], int]) -> I
 	cover a given pixel contributing 0 (black) there.
 
 	Args:
-		image_a: The first image; same mode as `image_b`.
-		image_b: The second image; same mode as `image_a`.
-		op: A function combining one channel value from each image into
-			an output channel value (assumed already in 0..255).
+		image_a: The first image; any mode.
+		image_b: The second image; any mode.
+		op: A function combining one binarized channel value from each image
+			(each already 0 or 1) into an output value.
 
 	Returns:
-		A new image, same mode as the inputs and sized to the larger input.
-
-	Raises:
-		ValueError: If `image_a` and `image_b` differ in mode.
+		A new 1-bit mode `"L"` image, sized to the larger input.
 	"""
-	if image_a.mode != image_b.mode:
-		raise ValueError(f"images must be the same mode, got {image_a.mode!r} and {image_b.mode!r}")
+	binary_a = threshold_single(image_a, _THRESHOLD)
+	binary_b = threshold_single(image_b, _THRESHOLD)
 
-	if image_a.size == image_b.size:
-		canvas_size = image_a.size
+	if binary_a.size == binary_b.size:
+		canvas_size = binary_a.size
 		offset_a: Coordinate = (0, 0)
 		offset_b: Coordinate = (0, 0)
-	elif image_a.width * image_a.height >= image_b.width * image_b.height:
-		canvas_size = image_a.size
+	elif binary_a.width * binary_a.height >= binary_b.width * binary_b.height:
+		canvas_size = binary_a.size
 		offset_a = (0, 0)
-		offset_b = ((image_a.width - image_b.width) // 2, (image_a.height - image_b.height) // 2)
+		offset_b = ((binary_a.width - binary_b.width) // 2, (binary_a.height - binary_b.height) // 2)
 	else:
-		canvas_size = image_b.size
+		canvas_size = binary_b.size
 		offset_b = (0, 0)
-		offset_a = ((image_b.width - image_a.width) // 2, (image_b.height - image_a.height) // 2)
+		offset_a = ((binary_b.width - binary_a.width) // 2, (binary_b.height - binary_a.height) // 2)
 
-	out = Image(image_a.mode, canvas_size)
+	out = Image("L", canvas_size, binary_a.bits_per_channel)
 	width, height = canvas_size
 	for y in range(height):
 		for x in range(width):
-			a = _pixel_or_blank(image_a, (x - offset_a[0], y - offset_a[1]))
-			b = _pixel_or_blank(image_b, (x - offset_b[0], y - offset_b[1]))
-			if image_a.mode == "L":
-				out.putpixel((x, y), op(as_gray(a), as_gray(b)))
-			else:
-				ar, ag, ab = as_rgb(a)
-				br, bg, bb = as_rgb(b)
-				out.putpixel((x, y), (op(ar, br), op(ag, bg), op(ab, bb)))
+			a = _pixel_or_black(binary_a, (x - offset_a[0], y - offset_a[1]))
+			b = _pixel_or_black(binary_b, (x - offset_b[0], y - offset_b[1]))
+			out.putpixel((x, y), op(a, b))
 	return out
 
 
@@ -204,18 +195,18 @@ def _max_size(image_a: Image, image_b: Image) -> Size:
 	return image_b.size
 
 
-def _pixel_or_blank(image: Image, xy: Coordinate) -> PixelValue:
-	"""Read a pixel, or a black (0) value of `image`'s mode if `xy` falls outside `image`.
+def _pixel_or_black(image: Image, xy: Coordinate) -> int:
+	"""Read a binarized (mode `"L"`) pixel, or 0 (black) if `xy` falls outside `image`.
 
 	Args:
-		image: The image to read from.
+		image: The (already binarized, mode `"L"`) image to read from.
 		xy: Pixel coordinate as an (x, y) tuple, possibly out of bounds.
 
 	Returns:
-		`image.getpixel(xy)`, or `0`/`(0, 0, 0)` (matching `image.mode`) if `xy` is outside `image`.
+		`image.getpixel(xy)`, or `0` if `xy` is outside `image`.
 	"""
 	x, y = xy
 	width, height = image.size
 	if 0 <= x < width and 0 <= y < height:
-		return image.getpixel((x, y))
-	return 0 if image.mode == "L" else (0, 0, 0)
+		return as_gray(image.getpixel((x, y)))
+	return 0

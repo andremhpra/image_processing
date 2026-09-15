@@ -14,21 +14,26 @@ def blend(image_a: Image, image_b: Image, weight_a: float = 0.5) -> Image:
 	pixels show through everywhere else.
 
 	Args:
-		image_a: The first image; same mode as `image_b`.
-		image_b: The second image; same mode as `image_a`.
+		image_a: The first image; same mode and bit depth as `image_b`.
+		image_b: The second image; same mode and bit depth as `image_a`.
 		weight_a: image_a's weight `wa`; image_b's weight is `wb = 1 - wa`.
 
 	Returns:
-		A new image, same mode as the inputs and sized to the larger input,
-		with each overlapping pixel set to `wa*A + wb*B` (clipped to the
-		images' valid range), and each non-overlapping pixel copied from
-		whichever image covers it.
+		A new image, same mode and bit depth as the inputs and sized to the
+		larger input, with each overlapping pixel set to `wa*A + wb*B`
+		(clipped to the images' valid range), and each non-overlapping pixel
+		copied from whichever image covers it.
 
 	Raises:
-		ValueError: If `image_a` and `image_b` differ in mode.
+		ValueError: If `image_a` and `image_b` differ in mode or bit depth.
 	"""
 	if image_a.mode != image_b.mode:
 		raise ValueError(f"images must be the same mode to blend, got {image_a.mode!r} and {image_b.mode!r}")
+	if image_a.bits_per_channel != image_b.bits_per_channel:
+		raise ValueError(
+			f"images must be the same bit depth to blend, got {image_a.bits_per_channel} and "
+			f"{image_b.bits_per_channel} bits per channel"
+		)
 
 	weight_b = 1 - weight_a
 	if image_a.size == image_b.size:
@@ -44,7 +49,7 @@ def blend(image_a: Image, image_b: Image, weight_a: float = 0.5) -> Image:
 		offset_b = (0, 0)
 		offset_a = ((image_b.width - image_a.width) // 2, (image_b.height - image_a.height) // 2)
 
-	out = Image(image_a.mode, canvas_size)
+	out = Image(image_a.mode, canvas_size, image_a.bits_per_channel)
 	max_value = image_a.max_value
 	width, height = canvas_size
 	for y in range(height):

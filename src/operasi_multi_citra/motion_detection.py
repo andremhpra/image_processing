@@ -13,24 +13,29 @@ def detect_motion(image_a: Image, image_b: Image) -> Image:
 	diffing, so the result is sized to fit inside the smaller frame.
 
 	Args:
-		image_a: The first (earlier) frame; same mode as `image_b`.
-		image_b: The second (later) frame; same mode as `image_a`.
+		image_a: The first (earlier) frame; same mode and bit depth as `image_b`.
+		image_b: The second (later) frame; same mode and bit depth as `image_a`.
 
 	Returns:
-		A new image, same mode as the inputs and sized to the smaller input,
-		with C = |A - B|.
+		A new image, same mode and bit depth as the inputs and sized to the
+		smaller input, with C = |A - B|.
 
 	Raises:
-		ValueError: If `image_a` and `image_b` differ in mode.
+		ValueError: If `image_a` and `image_b` differ in mode or bit depth.
 	"""
 	if image_a.mode != image_b.mode:
 		raise ValueError(f"images must be the same mode, got {image_a.mode!r} and {image_b.mode!r}")
+	if image_a.bits_per_channel != image_b.bits_per_channel:
+		raise ValueError(
+			f"images must be the same bit depth, got {image_a.bits_per_channel} and "
+			f"{image_b.bits_per_channel} bits per channel"
+		)
 
 	canvas_size = _min_size(image_a, image_b)
 	offset_a = _center_offset(image_a, canvas_size)
 	offset_b = _center_offset(image_b, canvas_size)
 
-	out = Image(image_a.mode, canvas_size)
+	out = Image(image_a.mode, canvas_size, image_a.bits_per_channel)
 	width, height = canvas_size
 	for y in range(height):
 		for x in range(width):

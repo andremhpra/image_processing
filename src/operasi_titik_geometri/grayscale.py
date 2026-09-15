@@ -61,7 +61,7 @@ def _convert(image: Image, fn: Callable[[int, int, int], float]) -> Image:
 	"""
 	if image.mode != "RGB":
 		raise ValueError(f"expected an RGB image, got mode {image.mode!r}")
-	out = Image("L", image.size)
+	out = Image("L", image.size, image.bits_per_channel)
 	max_value = out.max_value
 	width, height = image.size
 	for y in range(height):

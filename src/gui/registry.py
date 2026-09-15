@@ -143,7 +143,7 @@ OPERATIONS: list[Operation] = [
 	),
 	Operation(
 		"negation",
-		"Negation  (Ko = 255 - Ki)",
+		"Negation  (Ko = Kmax - Ki)",
 		"Operasi Titik",
 		1,
 		negate,

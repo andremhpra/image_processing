@@ -51,17 +51,19 @@ def peek_size(path: Union[str, Path]) -> Size:
 	raise ValueError(f"unsupported image format: {ext!r}")
 
 
-def new(mode: Mode, size: Size) -> Image:
+def new(mode: Mode, size: Size, bits_per_channel: int = 8) -> Image:
 	"""Create a blank image, mirroring PIL's Image.new.
 
 	Args:
-		mode: Pixel format, either `"L"` (8-bit grayscale) or `"RGB"` (24-bit truecolor).
+		mode: Pixel format, either `"L"` (grayscale) or `"RGB"` (truecolor).
 		size: Image dimensions as an (width, height) tuple, in pixels.
+		bits_per_channel: Bits used to store each channel's sample; see
+			`imagelib.image.MODE_BIT_DEPTHS` for which depths each mode allows.
 
 	Returns:
 		A new image filled with the mode's background value (black).
 	"""
-	return Image(mode, size)
+	return Image(mode, size, bits_per_channel)
 
 
 __all__ = ["Image", "open", "new", "peek_size", "as_gray", "as_rgb"]

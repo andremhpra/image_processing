@@ -23,7 +23,7 @@ def equalize_histogram(image: Image) -> Image:
 	width, height = image.size
 	total_pixels = width * height
 	levels = image.levels
-	out = Image(image.mode, image.size)
+	out = Image(image.mode, image.size, image.bits_per_channel)
 
 	if image.mode == "L":
 		mapping = _build_mapping(image, as_gray, total_pixels, levels)

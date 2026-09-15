@@ -9,8 +9,18 @@ Size = tuple[int, int]
 Coordinate = tuple[int, int]
 
 _BLANK: dict[Mode, PixelValue] = {"L": 0, "RGB": (0, 0, 0)}
-MODE_BITS: dict[Mode, int] = {"L": 8, "RGB": 24}
 MODE_CHANNELS: dict[Mode, int] = {"L": 1, "RGB": 3}
+DEFAULT_BITS_PER_CHANNEL = 8
+
+MODE_BIT_DEPTHS: dict[Mode, tuple[int, ...]] = {
+	"L": (1, 2, 4, 8, 16),
+	"RGB": (8, 16),
+}
+"""Bit depths each mode supports, one channel's sample at a time.
+
+`"L"` allows every depth PNG can natively store a grayscale sample at; `"RGB"`
+is restricted to the depths PNG allows for a truecolor sample (8 or 16) -
+a 1/2/4-bit-per-channel RGB triple isn't a format anything round-trips."""
 
 
 class Image:
@@ -18,22 +28,32 @@ class Image:
 
 	mode: Mode
 	size: Size
+	bits_per_channel: int
 	_pixels: list[PixelValue]  # flat, row-major backing store of pixel values
 
-	def __init__(self, mode: Mode, size: Size) -> None:
+	def __init__(self, mode: Mode, size: Size, bits_per_channel: int = DEFAULT_BITS_PER_CHANNEL) -> None:
 		"""Create a blank image filled with the mode's background value.
 
 		Args:
-			mode: Pixel format, either `"L"` (8-bit grayscale) or `"RGB"` (24-bit truecolor).
+			mode: Pixel format, either `"L"` (grayscale) or `"RGB"` (truecolor).
 			size: Image dimensions as an (width, height) tuple, in pixels.
+			bits_per_channel: Bits used to store each channel's sample. Defaults
+				to 8 (the classic byte-per-channel image). See `MODE_BIT_DEPTHS`
+				for which depths each mode allows.
 
 		Raises:
-			ValueError: If `mode` is not one of the supported modes.
+			ValueError: If `mode` or `bits_per_channel` isn't supported.
 		"""
-		if mode not in _BLANK:
-			raise ValueError(f"unsupported mode: {mode!r} (expected one of {sorted(_BLANK)})")
+		if mode not in MODE_BIT_DEPTHS:
+			raise ValueError(f"unsupported mode: {mode!r} (expected one of {sorted(MODE_BIT_DEPTHS)})")
+		if bits_per_channel not in MODE_BIT_DEPTHS[mode]:
+			raise ValueError(
+				f"unsupported bit depth for mode {mode!r}: {bits_per_channel} "
+				f"(expected one of {MODE_BIT_DEPTHS[mode]})"
+			)
 		self.mode: Mode = mode
 		self.size: Size = size
+		self.bits_per_channel = bits_per_channel
 		width, height = size
 		self._pixels: list[PixelValue] = [_BLANK[mode]] * (width * height)
 
@@ -49,13 +69,8 @@ class Image:
 
 	@property
 	def bits_per_pixel(self) -> int:
-		"""int: The number of bits used to store one pixel in this image's mode."""
-		return MODE_BITS[self.mode]
-
-	@property
-	def bits_per_channel(self) -> int:
-		"""int: The number of bits used to store one channel's sample (e.g. 8 for a byte-per-channel image)."""
-		return self.bits_per_pixel // MODE_CHANNELS[self.mode]
+		"""int: The number of bits used to store one pixel, across all of its channels."""
+		return self.bits_per_channel * MODE_CHANNELS[self.mode]
 
 	@property
 	def levels(self) -> int:

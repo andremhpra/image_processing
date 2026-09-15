@@ -26,7 +26,7 @@ def crop(image: Image, left: int, top: int, right: int, bottom: int) -> Image:
 		raise ValueError(f"crop box ({left}, {top}, {right}, {bottom}) is out of bounds for a {width}x{height} image")
 
 	new_width, new_height = right - left, bottom - top
-	out = Image(image.mode, (new_width, new_height))
+	out = Image(image.mode, (new_width, new_height), image.bits_per_channel)
 	for y in range(top, bottom):
 		for x in range(left, right):
 			out.putpixel((x - left, y - top), image.getpixel((x, y)))

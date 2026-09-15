@@ -2,9 +2,9 @@
 
 Point and geometric operations only ever look at one image at a time; this
 category instead combines images pixel by pixel: blending (overlay), motion
-detection (frame differencing), and bitwise logic operations (AND/OR/XOR/
-SUB/NOT). All three tolerate differently sized inputs (see their own
-docstrings for how).
+detection (frame differencing), and logic operations (AND/OR/XOR/SUB/NOT on
+auto-binarized inputs). All three tolerate differently sized inputs (see
+their own docstrings for how).
 """
 
 from operasi_multi_citra.blending import blend
