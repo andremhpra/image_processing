@@ -12,9 +12,6 @@ from typing import Callable, Optional
 from imagelib.image import Coordinate, Image, Size, as_gray
 from operasi_titik_geometri.thresholding import threshold_single
 
-_THRESHOLD = 128
-"""Gray level used to binarize each input before combining (see `threshold_single`)."""
-
 
 def logic_and(image_a: Image, image_b: Image) -> Image:
 	"""Logical AND of two images, each binarized first.
@@ -106,7 +103,7 @@ def logic_not(image: Image) -> Image:
 		A new 1-bit mode `"L"` image, same size as `image`, containing only 0
 		and 1, with C = NOT A.
 	"""
-	binary = threshold_single(image, _THRESHOLD)
+	binary = threshold_single(image, image.levels // 2)
 	out = Image("L", binary.size, binary.bits_per_channel)
 	max_value = binary.max_value
 	width, height = binary.size
@@ -136,7 +133,6 @@ def describe_size_mismatch(image_a: Image, image_b: Image) -> Optional[str]:
 		"pixels outside the smaller image's footprint are treated as 0 (black) before combining."
 	)
 
-
 def _combine(image_a: Image, image_b: Image, op: Callable[[int, int], int]) -> Image:
 	"""Binarize both images, then apply a binary operator to each corresponding pair of pixels.
 
@@ -154,8 +150,8 @@ def _combine(image_a: Image, image_b: Image, op: Callable[[int, int], int]) -> I
 	Returns:
 		A new 1-bit mode `"L"` image, sized to the larger input.
 	"""
-	binary_a = threshold_single(image_a, _THRESHOLD)
-	binary_b = threshold_single(image_b, _THRESHOLD)
+	binary_a = threshold_single(image_a, image_a.levels // 2)
+	binary_b = threshold_single(image_b, image_b.levels // 2)
 
 	if binary_a.size == binary_b.size:
 		canvas_size = binary_a.size

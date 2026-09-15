@@ -59,27 +59,27 @@ class Image:
 
 	@property
 	def width(self) -> int:
-		"""int: The image's width, in pixels."""
+		"""The image's width, in pixels."""
 		return self.size[0]
 
 	@property
 	def height(self) -> int:
-		"""int: The image's height, in pixels."""
+		"""The image's height, in pixels."""
 		return self.size[1]
 
 	@property
 	def bits_per_pixel(self) -> int:
-		"""int: The number of bits used to store one pixel, across all of its channels."""
+		"""The number of bits used to store one pixel, across all of its channels."""
 		return self.bits_per_channel * MODE_CHANNELS[self.mode]
 
 	@property
 	def levels(self) -> int:
-		"""int: The number of distinct values one channel's sample can take (e.g. 256 for an 8-bit channel)."""
+		"""The number of distinct values one channel's sample can take (e.g. 256 for an 8-bit channel)."""
 		return 1 << self.bits_per_channel
 
 	@property
 	def max_value(self) -> int:
-		"""int: The largest value one channel's sample can take (e.g. 255 for an 8-bit channel)."""
+		"""The largest value one channel's sample can take (e.g. 255 for an 8-bit channel)."""
 		return self.levels - 1
 
 	def _index(self, xy: Coordinate) -> int:
