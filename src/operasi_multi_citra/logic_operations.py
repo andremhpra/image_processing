@@ -10,7 +10,7 @@ depth the inputs were.
 from typing import Callable, Optional
 
 from imagelib.image import Coordinate, Image, Size, as_gray
-from operasi_titik_geometri.thresholding import threshold_single
+from operasi_titik.thresholding import threshold_single
 
 
 def logic_and(image_a: Image, image_b: Image) -> Image:

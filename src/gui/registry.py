@@ -12,6 +12,16 @@ from dataclasses import dataclass, field
 from typing import Callable, Optional, Sequence, Union
 
 from imagelib.image import Image
+from operasi_geometri import (
+	crop,
+	flip_combined,
+	flip_horizontal,
+	flip_vertical,
+	rotate_90_cw,
+	rotate_180_cw,
+	rotate_free,
+	scale,
+)
 from operasi_global import equalize_histogram
 from operasi_multi_citra import (
 	blend,
@@ -25,18 +35,10 @@ from operasi_multi_citra import (
 	logic_sub,
 	logic_xor,
 )
-from operasi_titik_geometri import (
+from operasi_titik import (
 	adjust_brightness,
-	crop,
 	enhance_contrast,
-	flip_combined,
-	flip_horizontal,
-	flip_vertical,
 	negate,
-	rotate_90_cw,
-	rotate_180_cw,
-	rotate_free,
-	scale,
 	threshold_double,
 	threshold_single,
 	to_grayscale_average,

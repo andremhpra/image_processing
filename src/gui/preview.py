@@ -15,7 +15,7 @@ particular Tk build's support for wider (16-bit) PPM/PGM samples.
 import tkinter as tk
 
 from imagelib.image import Image, as_gray, as_rgb
-from operasi_titik_geometri.scaling import scale
+from operasi_geometri.scaling import scale
 
 
 def to_photo_image(image: Image, max_size: int = 220) -> tk.PhotoImage:

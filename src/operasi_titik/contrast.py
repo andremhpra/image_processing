@@ -2,7 +2,7 @@
 
 from imagelib import Image
 
-from operasi_titik_geometri._util import apply_point_op
+from operasi_titik._util import apply_point_op
 
 
 def enhance_contrast(image: Image, gain: float, pivot: int = 127) -> Image:

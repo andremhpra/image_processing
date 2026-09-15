@@ -4,7 +4,7 @@ from typing import Optional
 
 from imagelib import Image
 
-from operasi_titik_geometri._util import apply_point_op
+from operasi_titik._util import apply_point_op
 
 
 def negate(image: Image) -> Image:

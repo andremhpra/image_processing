@@ -5,7 +5,7 @@ from typing import Callable
 from imagelib import Image
 from imagelib.image import as_gray
 
-from operasi_titik_geometri.grayscale import to_grayscale_weighted
+from operasi_titik.grayscale import to_grayscale_weighted
 
 
 def threshold_single(image: Image, ambang: int) -> Image:
