@@ -7,7 +7,7 @@ from imagelib import Image
 from operasi_titik_geometri._util import apply_point_op
 
 
-def negate(image: Image, kmax: Optional[int] = None) -> Image:
+def negate(image: Image) -> Image:
 	"""Ko = Kmax - Ki, the digital equivalent of a photo negative.
 
 	Args:
@@ -18,6 +18,5 @@ def negate(image: Image, kmax: Optional[int] = None) -> Image:
 	Returns:
 		A new image, same mode and size as `image`, with every channel negated.
 	"""
-	if kmax is None:
-		kmax = image.max_value
+	kmax = image.max_value
 	return apply_point_op(image, lambda k: kmax - k)
