@@ -15,6 +15,7 @@ def enhance_contrast(image: Image, gain: float, pivot: int = 127) -> Image:
 
 	Returns:
 		A new image, same mode and size as `image`, with the contrast
-		transform applied to every channel of every pixel (clipped to 0..255).
+		transform applied to every channel of every pixel (clipped to the
+		image's valid range).
 	"""
 	return apply_point_op(image, lambda k: gain * (k - pivot) + pivot)

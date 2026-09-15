@@ -9,8 +9,6 @@ from typing import Callable
 
 from imagelib.image import Image, PixelValue, as_gray, as_rgb
 
-LEVELS = 256
-
 
 def equalize_histogram(image: Image) -> Image:
 	"""Flatten the image's gray-level distribution. Applied per channel for RGB images.
@@ -24,15 +22,16 @@ def equalize_histogram(image: Image) -> Image:
 	"""
 	width, height = image.size
 	total_pixels = width * height
+	levels = image.levels
 	out = Image(image.mode, image.size)
 
 	if image.mode == "L":
-		mapping = _build_mapping(image, as_gray, total_pixels)
+		mapping = _build_mapping(image, as_gray, total_pixels, levels)
 		for y in range(height):
 			for x in range(width):
 				out.putpixel((x, y), mapping[as_gray(image.getpixel((x, y)))])
 	else:
-		mappings = [_build_mapping(image, _channel(c), total_pixels) for c in range(3)]
+		mappings = [_build_mapping(image, _channel(c), total_pixels, levels) for c in range(3)]
 		for y in range(height):
 			for x in range(width):
 				r, g, b = as_rgb(image.getpixel((x, y)))
@@ -55,26 +54,29 @@ def _channel(index: int) -> Callable[[PixelValue], int]:
 	return lambda pixel: as_rgb(pixel)[index]
 
 
-def _build_mapping(image: Image, channel: Callable[[PixelValue], int], total_pixels: int) -> list[int]:
+def _build_mapping(
+	image: Image, channel: Callable[[PixelValue], int], total_pixels: int, levels: int
+) -> list[int]:
 	"""Build a histogram-equalization lookup table for one channel.
 
 	Args:
 		image: The source image.
 		channel: A function extracting the relevant channel value from a pixel.
 		total_pixels: The image's total pixel count (`width * height`).
+		levels: The number of possible gray levels (`image.levels`).
 
 	Returns:
-		A 256-entry list mapping each input gray level to its equalized output level.
+		A `levels`-entry list mapping each input gray level to its equalized output level.
 	"""
 	width, height = image.size
-	counts = [0] * LEVELS
+	counts = [0] * levels
 	for y in range(height):
 		for x in range(width):
 			counts[channel(image.getpixel((x, y)))] += 1
 
-	mapping = [0] * LEVELS
+	mapping = [0] * levels
 	cumulative = 0
 	for level, count in enumerate(counts):
 		cumulative += count
-		mapping[level] = round(cumulative * (LEVELS - 1) / total_pixels)
+		mapping[level] = round(cumulative * (levels - 1) / total_pixels)
 	return mapping

@@ -50,7 +50,8 @@ def _convert(image: Image, fn: Callable[[int, int, int], float]) -> Image:
 	Args:
 		image: The source image; must be mode `"RGB"`.
 		fn: A function mapping a pixel's (R, G, B) channels to a gray level
-			(not necessarily clipped to 0..255; this function clips it).
+			(not necessarily clipped to the output's valid range; this
+			function clips it).
 
 	Returns:
 		A new mode `"L"` image, same size as `image`.
@@ -61,9 +62,10 @@ def _convert(image: Image, fn: Callable[[int, int, int], float]) -> Image:
 	if image.mode != "RGB":
 		raise ValueError(f"expected an RGB image, got mode {image.mode!r}")
 	out = Image("L", image.size)
+	max_value = out.max_value
 	width, height = image.size
 	for y in range(height):
 		for x in range(width):
 			r, g, b = as_rgb(image.getpixel((x, y)))
-			out.putpixel((x, y), max(0, min(255, round(fn(r, g, b)))))
+			out.putpixel((x, y), max(0, min(max_value, round(fn(r, g, b)))))
 	return out

@@ -14,6 +14,6 @@ def adjust_brightness(image: Image, c: int) -> Image:
 
 	Returns:
 		A new image, same mode and size as `image`, with `c` added to every
-		channel of every pixel (clipped to 0..255).
+		channel of every pixel (clipped to the image's valid range).
 	"""
 	return apply_point_op(image, lambda k: k + c)

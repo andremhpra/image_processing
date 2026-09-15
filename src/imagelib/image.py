@@ -10,6 +10,7 @@ Coordinate = tuple[int, int]
 
 _BLANK: dict[Mode, PixelValue] = {"L": 0, "RGB": (0, 0, 0)}
 MODE_BITS: dict[Mode, int] = {"L": 8, "RGB": 24}
+MODE_CHANNELS: dict[Mode, int] = {"L": 1, "RGB": 3}
 
 
 class Image:
@@ -50,6 +51,21 @@ class Image:
 	def bits_per_pixel(self) -> int:
 		"""int: The number of bits used to store one pixel in this image's mode."""
 		return MODE_BITS[self.mode]
+
+	@property
+	def bits_per_channel(self) -> int:
+		"""int: The number of bits used to store one channel's sample (e.g. 8 for a byte-per-channel image)."""
+		return self.bits_per_pixel // MODE_CHANNELS[self.mode]
+
+	@property
+	def levels(self) -> int:
+		"""int: The number of distinct values one channel's sample can take (e.g. 256 for an 8-bit channel)."""
+		return 1 << self.bits_per_channel
+
+	@property
+	def max_value(self) -> int:
+		"""int: The largest value one channel's sample can take (e.g. 255 for an 8-bit channel)."""
+		return self.levels - 1
 
 	def _index(self, xy: Coordinate) -> int:
 		"""Convert an (x, y) coordinate into an offset into the flat pixel list.

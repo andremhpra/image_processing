@@ -9,23 +9,24 @@ from operasi_titik_geometri.grayscale import to_grayscale_weighted
 
 
 def threshold_single(image: Image, ambang: int) -> Image:
-	"""0 (black) where Ki < ambang, 255 (white) where Ki >= ambang.
+	"""0 (black) where Ki < ambang, max value (white) where Ki >= ambang.
 
-	The assignment spec encodes the binary result as 0/1; here it's scaled to 0/255 so
-	the result is an image that can actually be displayed.
+	The assignment spec encodes the binary result as 0/1; here it's scaled to
+	0/max-value so the result is an image that can actually be displayed.
 
 	Args:
 		image: The source image; converted to grayscale first if not mode `"L"`.
 		ambang: The threshold gray level.
 
 	Returns:
-		A new mode `"L"` image, same size as `image`, containing only 0 and 255.
+		A new mode `"L"` image, same size as `image`, containing only 0 and
+		its max channel value.
 	"""
-	return _map(image, lambda k: 255 if k >= ambang else 0)
+	return _map(image, lambda k, white: white if k >= ambang else 0)
 
 
 def threshold_double(image: Image, ambang_bawah: int, ambang_atas: int) -> Image:
-	"""0 (black) where ambang_bawah <= Ki <= ambang_atas, 255 (white) otherwise.
+	"""0 (black) where ambang_bawah <= Ki <= ambang_atas, max value (white) otherwise.
 
 	Highlights every pixel outside a chosen band of gray levels.
 
@@ -35,17 +36,19 @@ def threshold_double(image: Image, ambang_bawah: int, ambang_atas: int) -> Image
 		ambang_atas: The band's upper gray-level bound, inclusive.
 
 	Returns:
-		A new mode `"L"` image, same size as `image`, containing only 0 and 255.
+		A new mode `"L"` image, same size as `image`, containing only 0 and
+		its max channel value.
 	"""
-	return _map(image, lambda k: 0 if ambang_bawah <= k <= ambang_atas else 255)
+	return _map(image, lambda k, white: 0 if ambang_bawah <= k <= ambang_atas else white)
 
 
-def _map(image: Image, fn: Callable[[int], int]) -> Image:
+def _map(image: Image, fn: Callable[[int, int], int]) -> Image:
 	"""Convert `image` to grayscale if needed, then map every gray level through `fn`.
 
 	Args:
 		image: The source image; converted to grayscale first if not mode `"L"`.
-		fn: A function mapping one input gray level to an output gray level.
+		fn: A function mapping one input gray level and the output image's max
+			channel value ("white") to an output gray level.
 
 	Returns:
 		A new mode `"L"` image, same size as `image`.
@@ -53,8 +56,9 @@ def _map(image: Image, fn: Callable[[int], int]) -> Image:
 	if image.mode != "L":
 		image = to_grayscale_weighted(image)
 	out = Image("L", image.size)
+	white = out.max_value
 	width, height = image.size
 	for y in range(height):
 		for x in range(width):
-			out.putpixel((x, y), fn(as_gray(image.getpixel((x, y)))))
+			out.putpixel((x, y), fn(as_gray(image.getpixel((x, y))), white))
 	return out

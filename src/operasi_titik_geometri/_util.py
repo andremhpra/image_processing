@@ -6,8 +6,8 @@ from imagelib import Image
 from imagelib.image import as_gray, as_rgb
 
 
-def clamp(value: float, low: int = 0, high: int = 255) -> int:
-	"""Clip a computed gray level back into the valid 0..255 range.
+def clamp(value: float, low: int, high: int) -> int:
+	"""Clip a computed channel value back into a valid range.
 
 	Args:
 		value: The computed value to clip and round.
@@ -29,20 +29,25 @@ def apply_point_op(image: Image, fn: Callable[[int], float]) -> Image:
 	Args:
 		image: The source image; mode `"L"` or `"RGB"`.
 		fn: A function mapping one input channel value to an output value
-			(not necessarily clipped to 0..255; this function clips it).
+			(not necessarily clipped to the image's valid range; this
+			function clips it).
 
 	Returns:
 		A new image, same mode and size as `image`, with `fn` applied to
 		every channel of every pixel.
 	"""
 	out = Image(image.mode, image.size)
+	max_value = image.max_value
 	width, height = image.size
 	for y in range(height):
 		for x in range(width):
 			value = image.getpixel((x, y))
 			if image.mode == "L":
-				out.putpixel((x, y), clamp(fn(as_gray(value))))
+				out.putpixel((x, y), clamp(fn(as_gray(value)), 0, max_value))
 			else:
 				r, g, b = as_rgb(value)
-				out.putpixel((x, y), (clamp(fn(r)), clamp(fn(g)), clamp(fn(b))))
+				out.putpixel(
+					(x, y),
+					(clamp(fn(r), 0, max_value), clamp(fn(g), 0, max_value), clamp(fn(b), 0, max_value)),
+				)
 	return out
