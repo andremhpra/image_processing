@@ -3,7 +3,7 @@
 # - Size resolution
 # - Each pixel's value as `(x, y) = <values>`
 
-from imagelib.image import Image
+from imagelib.image import Coordinate, Image
 
 
 def describe_image(image: Image) -> str:
@@ -23,5 +23,5 @@ def describe_image(image: Image) -> str:
 	]
 	for y in range(height):
 		for x in range(width):
-			lines.append(f"({x}, {y}) = {image.getpixel((x, y))}")
+			lines.append(f"({x}, {y}) = {image.getpixel(Coordinate(x, y))}")
 	return "\n".join(lines)

@@ -1,14 +1,36 @@
 """A minimal, format-agnostic in-memory pixel grid."""
 
 from pathlib import Path
-from typing import Iterable, Literal, Union
+from typing import Iterable, Literal, NamedTuple, Union
 
 Mode = Literal["L", "RGB"]
-PixelValue = Union[int, tuple[int, int, int]]
-Size = tuple[int, int]
-Coordinate = tuple[int, int]
 
-_BLANK: dict[Mode, PixelValue] = {"L": 0, "RGB": (0, 0, 0)}
+
+class Size(NamedTuple):
+	"""An image's (or a region's) dimensions, in pixels."""
+
+	width: int
+	height: int
+
+
+class Coordinate(NamedTuple):
+	"""A single pixel's position within an image."""
+
+	x: int
+	y: int
+
+
+class RGB(NamedTuple):
+	"""One truecolor pixel's channel values."""
+
+	r: int
+	g: int
+	b: int
+
+
+PixelValue = Union[int, RGB]
+
+_BLANK: dict[Mode, PixelValue] = {"L": 0, "RGB": RGB(0, 0, 0)}
 MODE_CHANNELS: dict[Mode, int] = {"L": 1, "RGB": 3}
 DEFAULT_BITS_PER_CHANNEL = 8
 
@@ -60,12 +82,12 @@ class Image:
 	@property
 	def width(self) -> int:
 		"""The image's width, in pixels."""
-		return self.size[0]
+		return self.size.width
 
 	@property
 	def height(self) -> int:
 		"""The image's height, in pixels."""
-		return self.size[1]
+		return self.size.height
 
 	@property
 	def bits_per_pixel(self) -> int:
@@ -175,14 +197,14 @@ def as_gray(value: PixelValue) -> int:
 	return value
 
 
-def as_rgb(value: PixelValue) -> tuple[int, int, int]:
+def as_rgb(value: PixelValue) -> RGB:
 	"""Narrow a pixel value known (by its image's mode) to be an RGB triple.
 
 	Args:
 		value: A pixel value read from an `"RGB"`-mode image.
 
 	Returns:
-		`value`, typed (and asserted) as an (R, G, B) tuple.
+		`value`, typed (and asserted) as an `RGB` triple.
 	"""
 	assert isinstance(value, tuple), f"expected an RGB pixel value, got {value!r}"
 	return value

@@ -13,7 +13,7 @@ import struct
 from pathlib import Path
 from typing import Union
 
-from imagelib.image import Image, Mode, Size, as_gray, as_rgb
+from imagelib.image import RGB, Coordinate, Image, Mode, Size, as_gray, as_rgb
 
 FILE_HEADER = "<2sIHHI"       # signature, file size, reserved x2, pixel data offset
 INFO_HEADER = "<IiiHHIIiiII"  # BITMAPINFOHEADER (40 bytes)
@@ -43,7 +43,7 @@ def peek_size(path: Union[str, Path]) -> Size:
 	if header[:2] != b"BM":
 		raise ValueError(f"{path}: not a BMP file")
 	width, raw_height = struct.unpack_from("<ii", header, 18)
-	return (width, abs(raw_height))
+	return Size(width, abs(raw_height))
 
 
 def read(path: Union[str, Path]) -> Image:
@@ -73,17 +73,17 @@ def read(path: Union[str, Path]) -> Image:
 	top_down = raw_height < 0
 	height = abs(raw_height)
 
-	palette: list[tuple[int, int, int]] = []
+	palette: list[RGB] = []
 	if bitcount in _L_BITCOUNTS:
 		palette_offset = 14 + header_size
 		num_colors = colors_used if colors_used else (1 << bitcount)
 		for i in range(num_colors):
 			b, g, r, _reserved = struct.unpack_from("<4B", data, palette_offset + i * 4)
-			palette.append((r, g, b))
+			palette.append(RGB(r, g, b))
 
 	row_size = _row_size(bitcount, width)
 
-	image = Image(BITCOUNT_MODE[bitcount], (width, height), BITCOUNT_BITS_PER_CHANNEL[bitcount])
+	image = Image(BITCOUNT_MODE[bitcount], Size(width, height), BITCOUNT_BITS_PER_CHANNEL[bitcount])
 	max_value = image.max_value
 	for file_row in range(height):
 		y = file_row if top_down else height - 1 - file_row
@@ -91,12 +91,12 @@ def read(path: Union[str, Path]) -> Image:
 		if bitcount == 24:
 			for x in range(width):
 				b, g, r = struct.unpack_from("<3B", data, row_offset + x * 3)
-				image.putpixel((x, y), (r, g, b))
+				image.putpixel(Coordinate(x, y), RGB(r, g, b))
 		else:
 			indices = _unpack_indices(data[row_offset : row_offset + row_size], bitcount, width)
 			for x in range(width):
 				r, g, _b = palette[indices[x]]
-				image.putpixel((x, y), round(r * max_value / 255))
+				image.putpixel(Coordinate(x, y), round(r * max_value / 255))
 
 	return image
 
@@ -153,10 +153,10 @@ def write(image: Image, path: Union[str, Path]) -> None:
 		if bitcount == 24:
 			row = bytearray()
 			for x in range(width):
-				r, g, b = as_rgb(image.getpixel((x, y)))
+				r, g, b = as_rgb(image.getpixel(Coordinate(x, y)))
 				row += bytes((b, g, r))
 		else:
-			indices = [as_gray(image.getpixel((x, y))) for x in range(width)]
+			indices = [as_gray(image.getpixel(Coordinate(x, y))) for x in range(width)]
 			row = bytearray(_pack_indices(indices, bitcount))
 		row += b"\x00" * (row_size - len(row))
 		rows += row

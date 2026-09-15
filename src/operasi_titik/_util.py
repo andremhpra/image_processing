@@ -3,7 +3,7 @@
 from typing import Callable
 
 from imagelib import Image
-from imagelib.image import as_gray, as_rgb
+from imagelib.image import RGB, Coordinate, as_gray, as_rgb
 
 
 def clamp(value: float, low: int, high: int) -> int:
@@ -41,13 +41,13 @@ def apply_point_op(image: Image, fn: Callable[[int], float]) -> Image:
 	width, height = image.size
 	for y in range(height):
 		for x in range(width):
-			value = image.getpixel((x, y))
+			value = image.getpixel(Coordinate(x, y))
 			if image.mode == "L":
-				out.putpixel((x, y), clamp(fn(as_gray(value)), 0, max_value))
+				out.putpixel(Coordinate(x, y), clamp(fn(as_gray(value)), 0, max_value))
 			else:
 				r, g, b = as_rgb(value)
 				out.putpixel(
-					(x, y),
-					(clamp(fn(r), 0, max_value), clamp(fn(g), 0, max_value), clamp(fn(b), 0, max_value)),
+					Coordinate(x, y),
+					RGB(clamp(fn(r), 0, max_value), clamp(fn(g), 0, max_value), clamp(fn(b), 0, max_value)),
 				)
 	return out

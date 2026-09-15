@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from imagelib.image import Image, Size, as_gray, as_rgb
+from imagelib.image import RGB, Coordinate, Image, Size, as_gray, as_rgb
 
 
 def detect_motion(image_a: Image, image_b: Image) -> Image:
@@ -39,14 +39,15 @@ def detect_motion(image_a: Image, image_b: Image) -> Image:
 	width, height = canvas_size
 	for y in range(height):
 		for x in range(width):
-			a = image_a.getpixel((x + offset_a[0], y + offset_a[1]))
-			b = image_b.getpixel((x + offset_b[0], y + offset_b[1]))
+			a = image_a.getpixel(Coordinate(x + offset_a.x, y + offset_a.y))
+			b = image_b.getpixel(Coordinate(x + offset_b.x, y + offset_b.y))
+			xy = Coordinate(x, y)
 			if image_a.mode == "L":
-				out.putpixel((x, y), abs(as_gray(a) - as_gray(b)))
+				out.putpixel(xy, abs(as_gray(a) - as_gray(b)))
 			else:
 				ar, ag, ab = as_rgb(a)
 				br, bg, bb = as_rgb(b)
-				out.putpixel((x, y), (abs(ar - br), abs(ag - bg), abs(ab - bb)))
+				out.putpixel(xy, RGB(abs(ar - br), abs(ag - bg), abs(ab - bb)))
 	return out
 
 
@@ -81,10 +82,10 @@ def _min_size(image_a: Image, image_b: Image) -> Size:
 	Returns:
 		`(min(widths), min(heights))`.
 	"""
-	return (min(image_a.width, image_b.width), min(image_a.height, image_b.height))
+	return Size(min(image_a.width, image_b.width), min(image_a.height, image_b.height))
 
 
-def _center_offset(image: Image, size: Size) -> Size:
+def _center_offset(image: Image, size: Size) -> Coordinate:
 	"""The top-left offset that centers a `size`-sized crop within `image`.
 
 	Args:
@@ -95,4 +96,4 @@ def _center_offset(image: Image, size: Size) -> Size:
 	Returns:
 		The (x, y) offset, into `image`, of the centered crop's top-left corner.
 	"""
-	return ((image.width - size[0]) // 2, (image.height - size[1]) // 2)
+	return Coordinate((image.width - size.width) // 2, (image.height - size.height) // 2)

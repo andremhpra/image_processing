@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-from imagelib.image import Image, PixelValue, as_gray, as_rgb
+from imagelib.image import RGB, Coordinate, Image, PixelValue, as_gray, as_rgb
 from operasi_multi_citra._util import center_offsets, pixel_or
 
 
@@ -37,21 +37,22 @@ def blend(image_a: Image, image_b: Image, weight_a: float = 0.5) -> Image:
 		)
 
 	weight_b = 1 - weight_a
-	canvas_size, offset_a, offset_b = center_offsets(image_a, image_b)
+	layout = center_offsets(image_a, image_b)
 
-	out = Image(image_a.mode, canvas_size, image_a.bits_per_channel)
+	out = Image(image_a.mode, layout.canvas_size, image_a.bits_per_channel)
 	max_value = image_a.max_value
-	width, height = canvas_size
+	width, height = layout.canvas_size
 	for y in range(height):
 		for x in range(width):
-			a = pixel_or(image_a, (x - offset_a[0], y - offset_a[1]))
-			b = pixel_or(image_b, (x - offset_b[0], y - offset_b[1]))
+			a = pixel_or(image_a, Coordinate(x - layout.offset_a.x, y - layout.offset_a.y))
+			b = pixel_or(image_b, Coordinate(x - layout.offset_b.x, y - layout.offset_b.y))
+			xy = Coordinate(x, y)
 			if a is not None and b is not None:
-				out.putpixel((x, y), _blend_pixel(image_a.mode, a, b, weight_a, weight_b, max_value))
+				out.putpixel(xy, _blend_pixel(image_a.mode, a, b, weight_a, weight_b, max_value))
 			elif a is not None:
-				out.putpixel((x, y), a)
+				out.putpixel(xy, a)
 			elif b is not None:
-				out.putpixel((x, y), b)
+				out.putpixel(xy, b)
 	return out
 
 
@@ -68,7 +69,7 @@ def describe_size_mismatch(image_a: Image, image_b: Image) -> Optional[str]:
 	"""
 	if image_a.size == image_b.size:
 		return None
-	canvas_width, canvas_height = center_offsets(image_a, image_b)[0]
+	canvas_width, canvas_height = center_offsets(image_a, image_b).canvas_size
 	return (
 		f"Image A is {image_a.width}x{image_a.height} and Image B is {image_b.width}x{image_b.height}.\n\n"
 		f"The smaller image will be centered on a canvas the size of the larger ({canvas_width}x{canvas_height}); "
@@ -97,7 +98,7 @@ def _blend_pixel(
 		return _mix(as_gray(a), as_gray(b), weight_a, weight_b, max_value)
 	ar, ag, ab = as_rgb(a)
 	br, bg, bb = as_rgb(b)
-	return (
+	return RGB(
 		_mix(ar, br, weight_a, weight_b, max_value),
 		_mix(ag, bg, weight_a, weight_b, max_value),
 		_mix(ab, bb, weight_a, weight_b, max_value),

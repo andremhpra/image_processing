@@ -16,7 +16,7 @@ import zlib
 from pathlib import Path
 from typing import Optional, Union
 
-from imagelib.image import Image, Mode, PixelValue, Size, as_gray, as_rgb
+from imagelib.image import RGB, Coordinate, Image, Mode, PixelValue, Size, as_gray, as_rgb
 
 _SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
@@ -58,7 +58,7 @@ def peek_size(path: Union[str, Path]) -> Size:
 	if header[12:16] != b"IHDR":
 		raise ValueError(f"{path}: missing IHDR chunk")
 	width, height = struct.unpack_from(">II", header, 16)
-	return (width, height)
+	return Size(width, height)
 
 
 def write(image: Image, path: Union[str, Path]) -> None:
@@ -80,7 +80,7 @@ def write(image: Image, path: Union[str, Path]) -> None:
 		raw.append(0)  # filter type 0 (None), simplest to produce correctly
 		samples: list[int] = []
 		for x in range(width):
-			value = image.getpixel((x, y))
+			value = image.getpixel(Coordinate(x, y))
 			if image.mode == "L":
 				samples.append(as_gray(value))
 			else:
@@ -120,7 +120,7 @@ def read(path: Union[str, Path]) -> Image:
 	bit_depth: Optional[int] = None
 	color_type: Optional[int] = None
 	interlace: Optional[int] = None
-	palette: list[tuple[int, int, int]] = []
+	palette: list[RGB] = []
 	idat = bytearray()
 
 	offset = 8
@@ -135,7 +135,7 @@ def read(path: Union[str, Path]) -> Image:
 				">IIBBBBB", chunk_data
 			)
 		elif tag == b"PLTE":
-			palette = [(chunk_data[i], chunk_data[i + 1], chunk_data[i + 2]) for i in range(0, len(chunk_data), 3)]
+			palette = [RGB(chunk_data[i], chunk_data[i + 1], chunk_data[i + 2]) for i in range(0, len(chunk_data), 3)]
 		elif tag == b"IDAT":
 			idat.extend(chunk_data)
 		elif tag == b"IEND":
@@ -155,7 +155,7 @@ def read(path: Union[str, Path]) -> Image:
 
 	mode: Mode = "L" if color_type in (_GRAYSCALE, _GRAYSCALE_ALPHA) else "RGB"
 	out_bit_depth = 8 if color_type == _PALETTE else bit_depth
-	image = Image(mode, (width, height), out_bit_depth)
+	image = Image(mode, Size(width, height), out_bit_depth)
 	max_value = image.max_value
 
 	previous = bytearray(scanline_bytes)
@@ -168,7 +168,7 @@ def read(path: Union[str, Path]) -> Image:
 		_unfilter(filter_type, line, previous, bpp)
 		row_samples = _unpack_samples(bytes(line), bit_depth, channels, width)
 		for x in range(width):
-			image.putpixel((x, y), _decode_pixel(row_samples[x], color_type, palette, max_value))
+			image.putpixel(Coordinate(x, y), _decode_pixel(row_samples[x], color_type, palette, max_value))
 		previous = line
 
 	return image
@@ -309,9 +309,7 @@ def _pack_samples(values: list[int], bit_depth: int) -> bytes:
 	return bytes(out)
 
 
-def _decode_pixel(
-	sample: list[int], color_type: int, palette: list[tuple[int, int, int]], max_value: int
-) -> PixelValue:
+def _decode_pixel(sample: list[int], color_type: int, palette: list[RGB], max_value: int) -> PixelValue:
 	"""Decode one pixel's raw channel samples into a `PixelValue`.
 
 	Args:
@@ -331,14 +329,14 @@ def _decode_pixel(
 	if color_type == _GRAYSCALE:
 		return sample[0]
 	if color_type == _RGB:
-		return (sample[0], sample[1], sample[2])
+		return RGB(sample[0], sample[1], sample[2])
 	if color_type == _PALETTE:
 		return palette[sample[0]]
 	if color_type == _GRAYSCALE_ALPHA:
 		return _over_white(sample[0], sample[1], max_value)
 	if color_type == _RGBA:
 		alpha = sample[3]
-		return (
+		return RGB(
 			_over_white(sample[0], alpha, max_value),
 			_over_white(sample[1], alpha, max_value),
 			_over_white(sample[2], alpha, max_value),

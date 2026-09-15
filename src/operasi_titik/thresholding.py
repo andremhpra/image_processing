@@ -3,7 +3,7 @@
 from typing import Callable
 
 from imagelib import Image
-from imagelib.image import as_gray
+from imagelib.image import Coordinate, as_gray
 
 from operasi_titik.grayscale import to_grayscale_weighted
 
@@ -59,5 +59,5 @@ def _map(image: Image, fn: Callable[[int], int]) -> Image:
 	width, height = image.size
 	for y in range(height):
 		for x in range(width):
-			out.putpixel((x, y), fn(as_gray(image.getpixel((x, y)))))
+			out.putpixel(Coordinate(x, y), fn(as_gray(image.getpixel(Coordinate(x, y)))))
 	return out

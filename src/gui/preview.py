@@ -14,7 +14,7 @@ particular Tk build's support for wider (16-bit) PPM/PGM samples.
 
 import tkinter as tk
 
-from imagelib.image import Image, as_gray, as_rgb
+from imagelib.image import Coordinate, Image, as_gray, as_rgb
 from operasi_geometri.scaling import scale
 
 
@@ -36,14 +36,16 @@ def to_photo_image(image: Image, max_size: int = 220) -> tk.PhotoImage:
 	if thumbnail.mode == "L":
 		header = f"P5\n{width} {height}\n255\n".encode("ascii")
 		body = bytes(
-			_to_byte(as_gray(thumbnail.getpixel((x, y))), max_value) for y in range(height) for x in range(width)
+			_to_byte(as_gray(thumbnail.getpixel(Coordinate(x, y))), max_value)
+			for y in range(height)
+			for x in range(width)
 		)
 	else:
 		header = f"P6\n{width} {height}\n255\n".encode("ascii")
 		body = bytearray()
 		for y in range(height):
 			for x in range(width):
-				r, g, b = as_rgb(thumbnail.getpixel((x, y)))
+				r, g, b = as_rgb(thumbnail.getpixel(Coordinate(x, y)))
 				body.extend((_to_byte(r, max_value), _to_byte(g, max_value), _to_byte(b, max_value)))
 		body = bytes(body)
 	return tk.PhotoImage(data=header + body)

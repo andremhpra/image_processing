@@ -9,7 +9,7 @@ depth the inputs were.
 
 from typing import Callable, Optional
 
-from imagelib.image import Image, as_gray
+from imagelib.image import Coordinate, Image, as_gray
 from operasi_multi_citra._util import center_offsets, pixel_or
 from operasi_titik.thresholding import threshold_single
 
@@ -110,7 +110,7 @@ def logic_not(image: Image) -> Image:
 	width, height = binary.size
 	for y in range(height):
 		for x in range(width):
-			out.putpixel((x, y), max_value - as_gray(binary.getpixel((x, y))))
+			out.putpixel(Coordinate(x, y), max_value - as_gray(binary.getpixel(Coordinate(x, y))))
 	return out
 
 
@@ -127,7 +127,7 @@ def describe_size_mismatch(image_a: Image, image_b: Image) -> Optional[str]:
 	"""
 	if image_a.size == image_b.size:
 		return None
-	canvas_width, canvas_height = center_offsets(image_a, image_b)[0]
+	canvas_width, canvas_height = center_offsets(image_a, image_b).canvas_size
 	return (
 		f"Image A is {image_a.width}x{image_a.height} and Image B is {image_b.width}x{image_b.height}.\n\n"
 		f"The smaller image will be centered on a canvas the size of the larger ({canvas_width}x{canvas_height}); "
@@ -154,13 +154,13 @@ def _combine(image_a: Image, image_b: Image, op: Callable[[int, int], int]) -> I
 	binary_a = threshold_single(image_a, image_a.levels // 2)
 	binary_b = threshold_single(image_b, image_b.levels // 2)
 
-	canvas_size, offset_a, offset_b = center_offsets(binary_a, binary_b)
+	layout = center_offsets(binary_a, binary_b)
 
-	out = Image("L", canvas_size, binary_a.bits_per_channel)
-	width, height = canvas_size
+	out = Image("L", layout.canvas_size, binary_a.bits_per_channel)
+	width, height = layout.canvas_size
 	for y in range(height):
 		for x in range(width):
-			a = as_gray(pixel_or(binary_a, (x - offset_a[0], y - offset_a[1]), 0))
-			b = as_gray(pixel_or(binary_b, (x - offset_b[0], y - offset_b[1]), 0))
-			out.putpixel((x, y), op(a, b))
+			a = as_gray(pixel_or(binary_a, Coordinate(x - layout.offset_a.x, y - layout.offset_a.y), 0))
+			b = as_gray(pixel_or(binary_b, Coordinate(x - layout.offset_b.x, y - layout.offset_b.y), 0))
+			out.putpixel(Coordinate(x, y), op(a, b))
 	return out

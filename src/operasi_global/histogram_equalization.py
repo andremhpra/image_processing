@@ -7,7 +7,7 @@ an 8-bit channel).
 
 from typing import Callable
 
-from imagelib.image import Image, PixelValue, as_gray, as_rgb
+from imagelib.image import RGB, Coordinate, Image, PixelValue, as_gray, as_rgb
 
 
 def equalize_histogram(image: Image) -> Image:
@@ -29,13 +29,13 @@ def equalize_histogram(image: Image) -> Image:
 		mapping = _build_mapping(image, as_gray, total_pixels, levels)
 		for y in range(height):
 			for x in range(width):
-				out.putpixel((x, y), mapping[as_gray(image.getpixel((x, y)))])
+				out.putpixel(Coordinate(x, y), mapping[as_gray(image.getpixel(Coordinate(x, y)))])
 	else:
 		mappings = [_build_mapping(image, _channel(c), total_pixels, levels) for c in range(3)]
 		for y in range(height):
 			for x in range(width):
-				r, g, b = as_rgb(image.getpixel((x, y)))
-				out.putpixel((x, y), (mappings[0][r], mappings[1][g], mappings[2][b]))
+				r, g, b = as_rgb(image.getpixel(Coordinate(x, y)))
+				out.putpixel(Coordinate(x, y), RGB(mappings[0][r], mappings[1][g], mappings[2][b]))
 	return out
 
 
@@ -72,7 +72,7 @@ def _build_mapping(
 	counts = [0] * levels
 	for y in range(height):
 		for x in range(width):
-			counts[channel(image.getpixel((x, y)))] += 1
+			counts[channel(image.getpixel(Coordinate(x, y)))] += 1
 
 	mapping = [0] * levels
 	cumulative = 0

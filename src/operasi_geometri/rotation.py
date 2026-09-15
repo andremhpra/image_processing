@@ -3,6 +3,7 @@
 import math
 
 from imagelib import Image
+from imagelib.image import Coordinate, Size
 
 
 def rotate_90_cw(image: Image) -> Image:
@@ -16,10 +17,10 @@ def rotate_90_cw(image: Image) -> Image:
 	"""
 	width, height = image.size
 	new_width, new_height = height, width
-	out = Image(image.mode, (new_width, new_height), image.bits_per_channel)
+	out = Image(image.mode, Size(new_width, new_height), image.bits_per_channel)
 	for y in range(height):
 		for x in range(width):
-			out.putpixel((new_width - 1 - y, x), image.getpixel((x, y)))
+			out.putpixel(Coordinate(new_width - 1 - y, x), image.getpixel(Coordinate(x, y)))
 	return out
 
 
@@ -33,10 +34,10 @@ def rotate_180_cw(image: Image) -> Image:
 		A new image, same mode and size as `image`, rotated 180 degrees.
 	"""
 	width, height = image.size
-	out = Image(image.mode, (width, height), image.bits_per_channel)
+	out = Image(image.mode, Size(width, height), image.bits_per_channel)
 	for y in range(height):
 		for x in range(width):
-			out.putpixel((width - 1 - x, height - 1 - y), image.getpixel((x, y)))
+			out.putpixel(Coordinate(width - 1 - x, height - 1 - y), image.getpixel(Coordinate(x, y)))
 	return out
 
 
@@ -69,12 +70,12 @@ def rotate_free(image: Image, degrees: float) -> Image:
 	cx, cy = width / 2, height / 2
 	ncx, ncy = new_width / 2, new_height / 2
 
-	out = Image(image.mode, (new_width, new_height), image.bits_per_channel)
+	out = Image(image.mode, Size(new_width, new_height), image.bits_per_channel)
 	for ny in range(new_height):
 		for nx in range(new_width):
 			dx, dy = nx - ncx, ny - ncy
 			source_x = round(dx * cos_t - dy * sin_t + cx)
 			source_y = round(dx * sin_t + dy * cos_t + cy)
 			if 0 <= source_x < width and 0 <= source_y < height:
-				out.putpixel((nx, ny), image.getpixel((source_x, source_y)))
+				out.putpixel(Coordinate(nx, ny), image.getpixel(Coordinate(source_x, source_y)))
 	return out

@@ -10,7 +10,7 @@ from typing import Optional, cast
 
 import imagelib
 from describe_bmp import describe_image
-from imagelib.image import Image
+from imagelib.image import Image, Size
 
 from gui.preview import to_photo_image
 from gui.registry import OPERATIONS, Operation, Param
@@ -27,7 +27,7 @@ LARGE_IMAGE_PIXELS = 2_000_000
 # Stands in for a `Param`'s image-dependent default before any image is
 # loaded (or if it's never loaded and the field is left untouched) - an
 # 8-bit image, matching this project's classic default bit depth.
-_DEFAULT_PARAM_IMAGE = Image("L", (1, 1))
+_DEFAULT_PARAM_IMAGE = Image("L", Size(1, 1))
 
 
 def _resolve_param_default(param: Param, image: Optional[Image]) -> object:
@@ -230,7 +230,7 @@ class App(tk.Tk):
 			return
 		self.input_images[index] = image
 		self.input_caption_vars[index].set(
-			f"{Path(path).name}\n{image.size[0]}x{image.size[1]}, {image.mode} ({image.bits_per_pixel}-bit)"
+			f"{Path(path).name}\n{image.width}x{image.height}, {image.mode} ({image.bits_per_pixel}-bit)"
 		)
 		self._set_preview(self.input_preview_labels[index], image)
 		self.status_var.set(f"Loaded {Path(path).name} into Image {chr(ord('A') + index)}")
@@ -294,7 +294,7 @@ class App(tk.Tk):
 
 		self._set_preview(self.result_preview_label, self.result_image)
 		self.result_caption_var.set(
-			f"{self.result_image.size[0]}x{self.result_image.size[1]}, "
+			f"{self.result_image.width}x{self.result_image.height}, "
 			f"{self.result_image.mode} ({self.result_image.bits_per_pixel}-bit)"
 		)
 		self.status_var.set(f"Ran: {self.operation.label}")

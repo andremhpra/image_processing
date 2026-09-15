@@ -3,7 +3,7 @@
 from typing import Callable
 
 from imagelib import Image
-from imagelib.image import as_rgb
+from imagelib.image import Coordinate, as_rgb
 
 
 def to_grayscale_average(image: Image) -> Image:
@@ -66,6 +66,6 @@ def _convert(image: Image, fn: Callable[[int, int, int], float]) -> Image:
 	width, height = image.size
 	for y in range(height):
 		for x in range(width):
-			r, g, b = as_rgb(image.getpixel((x, y)))
-			out.putpixel((x, y), max(0, min(max_value, round(fn(r, g, b)))))
+			r, g, b = as_rgb(image.getpixel(Coordinate(x, y)))
+			out.putpixel(Coordinate(x, y), max(0, min(max_value, round(fn(r, g, b)))))
 	return out

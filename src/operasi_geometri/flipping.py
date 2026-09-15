@@ -1,6 +1,7 @@
 """Pencerminan (flipping): horizontal, vertical, and combined mirroring."""
 
 from imagelib import Image
+from imagelib.image import Coordinate
 
 
 def flip_horizontal(image: Image) -> Image:
@@ -16,7 +17,7 @@ def flip_horizontal(image: Image) -> Image:
 	out = Image(image.mode, image.size, image.bits_per_channel)
 	for y in range(height):
 		for x in range(width):
-			out.putpixel((width - 1 - x, y), image.getpixel((x, y)))
+			out.putpixel(Coordinate(width - 1 - x, y), image.getpixel(Coordinate(x, y)))
 	return out
 
 
@@ -33,7 +34,7 @@ def flip_vertical(image: Image) -> Image:
 	out = Image(image.mode, image.size, image.bits_per_channel)
 	for y in range(height):
 		for x in range(width):
-			out.putpixel((x, height - 1 - y), image.getpixel((x, y)))
+			out.putpixel(Coordinate(x, height - 1 - y), image.getpixel(Coordinate(x, y)))
 	return out
 
 
@@ -50,5 +51,5 @@ def flip_combined(image: Image) -> Image:
 	out = Image(image.mode, image.size, image.bits_per_channel)
 	for y in range(height):
 		for x in range(width):
-			out.putpixel((width - 1 - x, height - 1 - y), image.getpixel((x, y)))
+			out.putpixel(Coordinate(width - 1 - x, height - 1 - y), image.getpixel(Coordinate(x, y)))
 	return out
