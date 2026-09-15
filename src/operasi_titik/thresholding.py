@@ -23,7 +23,7 @@ def threshold_single(image: Image, ambang: int) -> Image:
 	Returns:
 		A new 1-bit mode `"L"` image, same size as `image`, containing only 0 and 1.
 	"""
-	return _map(image, lambda k, white: white if k >= ambang else 0)
+	return _map(image, lambda k: 1 if k >= ambang else 0)
 
 
 def threshold_double(image: Image, ambang_bawah: int, ambang_atas: int) -> Image:
@@ -40,17 +40,15 @@ def threshold_double(image: Image, ambang_bawah: int, ambang_atas: int) -> Image
 	Returns:
 		A new 1-bit mode `"L"` image, same size as `image`, containing only 0 and 1.
 	"""
-	return _map(image, lambda k, white: 0 if ambang_bawah <= k <= ambang_atas else white)
+	return _map(image, lambda k: 0 if ambang_bawah <= k <= ambang_atas else 1)
 
 
-def _map(image: Image, fn: Callable[[int, int], int]) -> Image:
+def _map(image: Image, fn: Callable[[int], int]) -> Image:
 	"""Convert `image` to grayscale if needed, then map every gray level through `fn`.
 
 	Args:
 		image: The source image; converted to grayscale first if not mode `"L"`.
-		fn: A function mapping one input gray level (on `image`'s own scale)
-			and the output image's max channel value ("white", always 1) to
-			an output gray level.
+		fn: Takes in the grayscale pixel from `image`, which should return `1` or `0` based on the thresholding method.
 
 	Returns:
 		A new 1-bit mode `"L"` image, same size as `image`.
@@ -58,9 +56,8 @@ def _map(image: Image, fn: Callable[[int, int], int]) -> Image:
 	if image.mode != "L":
 		image = to_grayscale_weighted(image)
 	out = Image("L", image.size, 1)
-	white = out.max_value
 	width, height = image.size
 	for y in range(height):
 		for x in range(width):
-			out.putpixel((x, y), fn(as_gray(image.getpixel((x, y))), white))
+			out.putpixel((x, y), fn(as_gray(image.getpixel((x, y)))))
 	return out
