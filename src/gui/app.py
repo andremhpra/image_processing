@@ -13,7 +13,7 @@ from describe_bmp import describe_image
 from imagelib.image import Image
 
 from gui.preview import to_photo_image
-from gui.registry import OPERATIONS, Operation
+from gui.registry import OPERATIONS, Operation, Param
 
 PREVIEW_SIZE = 220
 FILE_TYPES = [("Images", "*.bmp *.png"), ("Bitmap", "*.bmp"), ("PNG", "*.png"), ("All files", "*.*")]
@@ -23,6 +23,27 @@ SAMPLES_DIR = Path(__file__).resolve().parents[2] / "samples"
 # and every operation are pure-Python, per-pixel loops with no imaging-library
 # acceleration, so a large image can take a long time.
 LARGE_IMAGE_PIXELS = 2_000_000
+
+# Stands in for a `Param`'s image-dependent default before any image is
+# loaded (or if it's never loaded and the field is left untouched) - an
+# 8-bit image, matching this project's classic default bit depth.
+_DEFAULT_PARAM_IMAGE = Image("L", (1, 1))
+
+
+def _resolve_param_default(param: Param, image: Optional[Image]) -> object:
+	"""Resolve a `Param`'s pre-fill value, calling it with `image` if it's dynamic.
+
+	Args:
+		param: The parameter whose default to resolve.
+		image: The operation's first input image, or None if it isn't
+			loaded yet (in which case `_DEFAULT_PARAM_IMAGE` stands in).
+
+	Returns:
+		The value to pre-fill the parameter's entry field with.
+	"""
+	if not callable(param.default):
+		return param.default
+	return param.default(image if image is not None else _DEFAULT_PARAM_IMAGE)
 
 
 class App(tk.Tk):
@@ -155,11 +176,12 @@ class App(tk.Tk):
 		for child in self.params_frame.winfo_children():
 			child.destroy()
 		self.param_vars = {}
+		first_image = self.input_images[0] if self.input_images else None
 		for param in self.operation.params:
 			row = ttk.Frame(self.params_frame)
 			row.pack(fill="x", pady=2)
 			ttk.Label(row, text=param.label, width=22, anchor="w").pack(side="left")
-			var = tk.StringVar(value=str(param.default))
+			var = tk.StringVar(value=str(_resolve_param_default(param, first_image)))
 			if param.kind == "choice":
 				widget: tk.Widget = ttk.Combobox(row, textvariable=var, state="readonly", values=list(param.choices))
 			else:
@@ -212,6 +234,21 @@ class App(tk.Tk):
 		)
 		self._set_preview(self.input_preview_labels[index], image)
 		self.status_var.set(f"Loaded {Path(path).name} into Image {chr(ord('A') + index)}")
+		if index == 0:
+			self._refresh_dynamic_param_defaults()
+
+	def _refresh_dynamic_param_defaults(self) -> None:
+		"""Re-fill every image-dependent parameter field from the freshly (re)loaded Image A.
+
+		Only fields whose `Param.default` is a callable are touched; any
+		value the user already typed into a fixed-default field is left alone.
+		"""
+		first_image = self.input_images[0] if self.input_images else None
+		if first_image is None:
+			return
+		for param in self.operation.params:
+			if callable(param.default) and param.name in self.param_vars:
+				self.param_vars[param.name].set(str(param.default(first_image)))
 
 	def _collect_params(self) -> dict[str, object]:
 		"""Read and convert the current operation's parameter entry fields.

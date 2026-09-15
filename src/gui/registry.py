@@ -56,8 +56,13 @@ class Param:
 	"""The human-readable label shown next to the input field."""
 	kind: ParamKind
 	"""The input widget kind: `"int"`, `"float"`, or `"choice"`."""
-	default: Union[int, float, str]
-	"""The value the input field is pre-filled with."""
+	default: Union[int, float, str, Callable[[Image], Union[int, float, str]]]
+	"""The value the input field is pre-filled with, or - for a default that
+	depends on the loaded image, like a threshold set relative to the
+	image's own bit depth rather than a fixed 0-255 assumption - a callable
+	that computes it from the operation's first input image. Resolved
+	against that image once it's loaded (and re-resolved whenever it's
+	reloaded); before that, against a default 8-bit image."""
 	choices: Sequence[str] = field(default_factory=tuple)
 	"""The selectable values, used only when `kind` is `"choice"`."""
 
@@ -139,7 +144,7 @@ OPERATIONS: list[Operation] = [
 		"Operasi Titik",
 		1,
 		enhance_contrast,
-		[Param("gain", "Gain (G)", "float", 1.5), Param("pivot", "Pivot (P)", "int", 127)],
+		[Param("gain", "Gain (G)", "float", 1.5), Param("pivot", "Pivot (P)", "int", lambda image: image.levels // 2)],
 	),
 	Operation(
 		"negation",
@@ -168,7 +173,7 @@ OPERATIONS: list[Operation] = [
 		"Operasi Titik",
 		1,
 		threshold_single,
-		[Param("ambang", "Ambang (threshold)", "int", 128)],
+		[Param("ambang", "Ambang (threshold)", "int", lambda image: image.levels // 2)],
 	),
 	Operation(
 		"threshold_double",
@@ -176,7 +181,10 @@ OPERATIONS: list[Operation] = [
 		"Operasi Titik",
 		1,
 		threshold_double,
-		[Param("ambang_bawah", "Ambang bawah", "int", 80), Param("ambang_atas", "Ambang atas", "int", 160)],
+		[
+			Param("ambang_bawah", "Ambang bawah", "int", lambda image: image.levels // 4),
+			Param("ambang_atas", "Ambang atas", "int", lambda image: image.levels * 3 // 4),
+		],
 	),
 	Operation(
 		"flip",
