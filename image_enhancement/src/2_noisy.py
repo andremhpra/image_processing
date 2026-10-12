@@ -2,7 +2,7 @@
 Gunakan filter median, lalu penajaman.
 """
 
-from citra_io import baca, tulis
+from citra_io import baca, simpan
 from bmp_io import (
     CitraGrayscale,
     konversi_citra_grayscale,
@@ -56,4 +56,4 @@ abu = konversi_citra_grayscale(citra)
 hasil = filter_median(abu, MEDIAN)
 
 citra_hasil = CitraGrayscale(w, h, hasil, maks)
-tulis("2_noisy.bmp", citra_hasil)
+simpan("2_noisy.bmp", citra, citra_hasil)

@@ -1,14 +1,9 @@
-from bmp_io import (
-    CitraGrayscale,
-    baca_bmp,
-    tulis_bmp,
-    gray,
-    histogram,
-    gambar_histogram,
-)
+from bmp_io import CitraGrayscale, baca_bmp, gray, simpan_hasil
 
-wa, ha, A, maks, _ = baca_bmp("frame_A.bmp")
-wb, hb, B, maks_b, _ = baca_bmp("frame_B.bmp")
+citra_a = baca_bmp("frame_A.bmp")
+citra_b = baca_bmp("frame_B.bmp")
+wa, ha, A, maks, _ = citra_a
+wb, hb, B, maks_b, _ = citra_b
 if (wa, ha) != (wb, hb):
     raise SystemExit("Ukuran kedua citra harus sama")
 if maks != maks_b:
@@ -22,6 +17,8 @@ for y in range(ha):
         hasil[y][x] = abs(gray(A[y][x], maks) - gray(B[y][x], maks))
 
 citra_hasil = CitraGrayscale(wa, ha, hasil, maks)
-tulis_bmp("11_deteksi_gerakan.bmp", citra_hasil)
 
-gambar_histogram(histogram(citra_hasil), "11_deteksi_gerakan.bmp")
+simpan_hasil(
+    [("frame_A.bmp", citra_a), ("frame_B.bmp", citra_b)],
+    [("deteksi gerakan", citra_hasil)],
+)

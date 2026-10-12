@@ -1,20 +1,16 @@
-from bmp_io import (
-    CitraGrayscale,
-    baca_bmp,
-    tulis_bmp,
-    gray,
-    histogram,
-    gambar_histogram,
-)
+from bmp_io import Citra, CitraGrayscale, baca_bmp, gray, simpan_hasil
 
-wa, ha, A, maks, _ = baca_bmp("kotak_A.bmp")
-wb, hb, B, maks_b, _ = baca_bmp("kotak_B.bmp")
+citra_a = baca_bmp("kotak_A.bmp")
+citra_b = baca_bmp("kotak_B.bmp")
+wa, ha, A, maks, _ = citra_a
+wb, hb, B, maks_b, _ = citra_b
 if (wa, ha) != (wb, hb):
     raise SystemExit("Ukuran kedua citra harus sama")
 if maks != maks_b:
     raise SystemExit("Kedalaman warna kedua citra harus sama")
 tengah = (maks + 1) // 2
 
+sesudah: list[tuple[str, Citra]] = []
 for op in ("AND", "OR", "XOR", "SUB", "NOT"):
     hasil = []
     for _ in range(ha):
@@ -35,7 +31,6 @@ for op in ("AND", "OR", "XOR", "SUB", "NOT"):
                 out = 1 - a
             hasil[y][x] = maks if out else 0
 
-    citra_hasil = CitraGrayscale(wa, ha, hasil, maks)
-    tulis_bmp("12_logika_" + op + ".bmp", citra_hasil)
+    sesudah.append((op, CitraGrayscale(wa, ha, hasil, maks)))
 
-    gambar_histogram(histogram(citra_hasil), "12_logika_" + op + ".bmp")
+simpan_hasil([("kotak_A.bmp", citra_a), ("kotak_B.bmp", citra_b)], sesudah)

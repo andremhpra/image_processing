@@ -1,12 +1,10 @@
 from bmp_io import (
     CitraGrayscale,
     baca_bmp,
-    tulis_bmp,
     konversi_citra_grayscale,
     clamp,
     konvolusi,
-    histogram,
-    gambar_histogram,
+    simpan_hasil,
 )
 
 BETA = 2.0
@@ -32,9 +30,7 @@ for y in range(h):
 citra_hasil_kiri = CitraGrayscale(w, h, hasil_kiri, maks)
 citra_hasil_kanan = CitraGrayscale(w, h, hasil_kanan, maks)
 
-
-tulis_bmp("18_emboss_kiri.bmp", citra_hasil_kiri)
-tulis_bmp("18_emboss_kanan.bmp", citra_hasil_kanan)
-
-gambar_histogram(histogram(citra_hasil_kiri), "18_emboss_kiri.bmp")
-gambar_histogram(histogram(citra_hasil_kanan), "18_emboss_kanan.bmp")
+simpan_hasil(
+    [("sample.bmp", citra)],
+    [("emboss kiri", citra_hasil_kiri), ("emboss kanan", citra_hasil_kanan)],
+)

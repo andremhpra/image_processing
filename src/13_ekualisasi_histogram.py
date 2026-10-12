@@ -2,9 +2,7 @@ from bmp_io import (
     CitraGrayscale,
     CitraRGB,
     baca_bmp,
-    tulis_bmp,
-    histogram,
-    gambar_histogram,
+    simpan_hasil,
     ambil_warna,
     gabung_warna,
 )
@@ -37,7 +35,6 @@ def ekualisasi(kanal: list[list[int]], w: int, h: int, maks: int) -> list[list[i
 
 citra = baca_bmp("sample.bmp")
 w, h, maks = citra.w, citra.h, citra.maks
-gambar_histogram(histogram(citra), "13_ekualisasi_sebelum.bmp")
 
 if citra.mode == "grayscale":
     citra_hasil = CitraGrayscale(w, h, ekualisasi(citra.pixels, w, h, maks), maks)
@@ -48,5 +45,4 @@ else:
     b = ekualisasi(ambil_warna(citra.pixels, w, h, 2), w, h, maks)
     citra_hasil = CitraRGB(w, h, gabung_warna(r, g, b, w, h), maks)
 
-tulis_bmp("13_ekualisasi.bmp", citra_hasil)
-gambar_histogram(histogram(citra_hasil), "13_ekualisasi.bmp")
+simpan_hasil([("sample.bmp", citra)], [("ekualisasi", citra_hasil)])

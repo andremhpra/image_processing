@@ -1,13 +1,12 @@
 from bmp_io import (
+    Citra,
     CitraGrayscale,
     baca_bmp,
-    tulis_bmp,
     konversi_citra_grayscale,
     clamp,
     konvolusi,
     jendela,
-    histogram,
-    gambar_histogram,
+    simpan_hasil,
 )
 
 MEAN = [[1 / 9, 1 / 9, 1 / 9], [1 / 9, 1 / 9, 1 / 9], [1 / 9, 1 / 9, 1 / 9]]
@@ -51,13 +50,14 @@ for y in range(h):
         mid_point[y][x] = clamp((tetangga[0] + tetangga[-1]) / 2, maks)
 
 
+sesudah: list[tuple[str, Citra]] = []
 for nama, hasil in (
-    ("noisy", abu),
+    ("grayscale", abu),
     ("mean", mean),
     ("median", median),
     ("mid_point", mid_point),
     ("gaussian", gaussian),
 ):
-    citra_hasil = CitraGrayscale(w, h, hasil, maks)
-    tulis_bmp(f"17_reduksi_{nama}.bmp", citra_hasil)
-    gambar_histogram(histogram(citra_hasil), f"17_reduksi_{nama}.bmp")
+    sesudah.append((nama, CitraGrayscale(w, h, hasil, maks)))
+
+simpan_hasil([("noisy.bmp", citra)], sesudah)

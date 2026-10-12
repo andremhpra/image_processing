@@ -1,4 +1,4 @@
-from bmp_io import CitraRGB, baca_bmp, tulis_bmp, histogram, gambar_histogram
+from bmp_io import CitraRGB, baca_bmp, simpan_hasil
 
 citra = baca_bmp("sample.bmp")
 if citra.mode != "rgb":
@@ -16,6 +16,5 @@ for y in range(hb):
         hasil[y][x] = pixels[y + yt][x + xl]
 
 citra_hasil = CitraRGB(wb, hb, hasil, maks)
-tulis_bmp("08_crop.bmp", citra_hasil)
 
-gambar_histogram(histogram(citra_hasil), "08_crop.bmp")
+simpan_hasil([("sample.bmp", citra)], [("crop", citra_hasil)])

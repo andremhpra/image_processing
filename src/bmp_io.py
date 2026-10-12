@@ -1,12 +1,18 @@
+import sys
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal, NamedTuple
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from matplotlib.axes import Axes
+from matplotlib.ticker import MultipleLocator, StrMethodFormatter
+
 ROOT = Path(__file__).resolve().parent.parent
 FOLDER_SAMPLE = ROOT / "sample"
 FOLDER_RESULT = ROOT / "result"
-FOLDER_IMG = FOLDER_RESULT / "img"
-FOLDER_HISTOGRAM = FOLDER_RESULT / "histogram"
 
 PikselRGB = tuple[int, int, int]
 
@@ -145,40 +151,79 @@ def konvolusi(
     return hasil
 
 
-def gambar_batang[T](
-    img: list[list[T]], hist: list[int], atas: int, tinggi: int, puncak: int, warna: T
-) -> None:
-    lebar_batang = len(img[0]) // len(hist)
-    for i, jumlah in enumerate(hist):
-        batang = round(jumlah * tinggi / puncak)
-        for y in range(atas + tinggi - batang, atas + tinggi):
-            for x in range(i * lebar_batang, (i + 1) * lebar_batang):
-                img[y][x] = warna
+# merah, hijau, biru
+WARNA_KANAL = ("#d62728", "#2ca02c", "#1f77b4")
+WARNA_ABU = ("#555555",)
 
 
-def gambar_histogram(
-    hist: list[list[int]], path: str, folder: Path = FOLDER_HISTOGRAM
-) -> None:
-    tinggi = 100
-    jarak = 5
-    w = len(hist[0]) * max(1, 256 // len(hist[0]))
-    puncak = 1
-    for k in range(len(hist)):
-        puncak = max(puncak, max(hist[k]))
-    if len(hist) == 1:
+def gambar_citra(ax: Axes, citra: Citra) -> None:
+    if citra.mode == "grayscale":
+        ax.imshow(citra.pixels, cmap="gray", vmin=0, vmax=citra.maks)
+    else:
+        # imshow menerima RGB float 0..1, jadi normalisasi terhadap maks
         img = []
-        for _ in range(tinggi):
-            img.append([1] * w)
-        gambar_batang(img, hist[0], 0, tinggi, puncak, 0)
-        tulis_bmp(path, CitraGrayscale(w, tinggi, img, 1), folder)
-        return
-    h = len(hist) * tinggi + (len(hist) - 1) * jarak
-    img_rgb = []
-    for _ in range(h):
-        img_rgb.append([(255, 255, 255)] * w)
-    for k, warna in enumerate(((255, 0, 0), (0, 255, 0), (0, 0, 255))):
-        gambar_batang(img_rgb, hist[k], k * (tinggi + jarak), tinggi, puncak, warna)
-    tulis_bmp(path, CitraRGB(w, h, img_rgb, 255), folder)
+        for baris in citra.pixels:
+            baris_img = []
+            for r, g, b in baris:
+                baris_img.append((r / citra.maks, g / citra.maks, b / citra.maks))
+            img.append(baris_img)
+        ax.imshow(img)
+    ax.axis("off")
+
+
+def gambar_histogram(ax: Axes, citra: Citra) -> None:
+    hist = histogram(citra)
+    nilai = list(range(citra.maks + 1))
+    warna_kanal = WARNA_ABU if citra.mode == "grayscale" else WARNA_KANAL
+    # isi transparan + garis tepi tegas: ketiga kanal tetap terlihat saat bertumpuk
+    for warna, h in zip(warna_kanal, hist):
+        ax.fill_between(nilai, h, step="mid", color=warna, alpha=0.2, linewidth=0)
+        ax.step(nilai, h, where="mid", color=warna, linewidth=1.2)
+    # beri ruang di kiri/kanan dan atas agar batang di 0, maks, dan puncak tidak tertutup bingkai
+    tepi = max(2, citra.maks * 0.02)
+    ax.set_xlim(-tepi, citra.maks + tepi)
+    ax.margins(y=0.05)
+    ax.set_ylim(bottom=0)
+    ax.xaxis.set_major_locator(MultipleLocator(25 if citra.maks >= 25 else 1))
+    ax.set_xlabel("Intensitas")
+    ax.set_ylabel("Jumlah piksel")
+    ax.yaxis.set_major_formatter(StrMethodFormatter("{x:,.0f}"))
+    ax.grid(axis="y", color="#e0e0e0", linewidth=0.8)
+    ax.set_axisbelow(True)
+
+
+def simpan_gambar(daftar: list[tuple[str, Citra]], judul: str, path: Path) -> None:
+    fig, axes = plt.subplots(
+        len(daftar),
+        2,
+        figsize=(13, 4.5 * len(daftar)),
+        width_ratios=(1, 1.6),
+        squeeze=False,
+    )
+    for (nama, citra), (ax_citra, ax_hist) in zip(daftar, axes):
+        gambar_citra(ax_citra, citra)
+        ax_citra.set_title(f"{nama} ({citra.w} x {citra.h})")
+        gambar_histogram(ax_hist, citra)
+        ax_hist.set_title(f"Histogram {nama}")
+    fig.suptitle(judul, fontsize=16, fontweight="bold")
+    fig.tight_layout()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, dpi=110)
+    plt.close(fig)
+
+
+def simpan_hasil(
+    sebelum: list[tuple[str, Citra]],
+    sesudah: list[tuple[str, Citra]],
+    folder: Path = FOLDER_RESULT,
+) -> None:
+    # folder hasil dinamai sesuai nama program, mis. result/01_brightness/
+    nama_program = Path(sys.argv[0]).stem
+    folder_program = folder / nama_program
+    # nama proses dari nama program, mis. "11_deteksi_gerakan" -> "Deteksi Gerakan"
+    proses = nama_program.split("_", 1)[-1].replace("_", " ").title()
+    simpan_gambar(sebelum, f"Sebelum {proses}", folder_program / "sebelum.png")
+    simpan_gambar(sesudah, f"Sesudah {proses}", folder_program / "sesudah.png")
 
 
 def geseran_topeng(topeng: int) -> int:
@@ -271,7 +316,7 @@ def baca_bmp(path: str, folder: Path = FOLDER_SAMPLE) -> Citra:
     return CitraRGB(w, h, pixels, 255)
 
 
-def tulis_bmp(path: str, citra: Citra, folder: Path = FOLDER_IMG) -> None:
+def tulis_bmp(path: str, citra: Citra, folder: Path = FOLDER_RESULT) -> None:
     w, h, maks = citra.w, citra.h, citra.maks
     palet: list[int] = []
     if citra.mode == "grayscale":

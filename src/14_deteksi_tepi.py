@@ -1,12 +1,10 @@
 from bmp_io import (
     CitraGrayscale,
     baca_bmp,
-    tulis_bmp,
     konversi_citra_grayscale,
     clamp,
     konvolusi,
-    histogram,
-    gambar_histogram,
+    simpan_hasil,
 )
 
 ROBERT_1 = [[1.0, 0], [0, -1.0]]
@@ -26,5 +24,4 @@ for y in range(h):
     hasil.append(baris)
 
 citra_hasil = CitraGrayscale(w, h, hasil, maks)
-tulis_bmp("14_tepi_robert.bmp", citra_hasil)
-gambar_histogram(histogram(citra_hasil), "14_tepi_robert.bmp")
+simpan_hasil([("sample.bmp", citra)], [("tepi robert", citra_hasil)])

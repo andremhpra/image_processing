@@ -2,11 +2,9 @@
 Gunakan ekualisasi histogram.
 """
 
-from citra_io import baca, tulis
+from citra_io import baca, simpan
 from bmp_io import (
     CitraRGB,
-    histogram,
-    gambar_histogram,
     ambil_warna,
     gabung_warna,
     CitraGrayscale,
@@ -50,4 +48,4 @@ else:
     b = ekualisasi(ambil_warna(citra.pixels, w, h, 2), w, h, maks)
     citra_hasil = CitraRGB(w, h, gabung_warna(r, g, b, w, h), maks)
 
-tulis("3_contrast.bmp", citra_hasil)
+simpan("3_contrast.bmp", citra, citra_hasil)

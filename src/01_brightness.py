@@ -1,4 +1,4 @@
-from bmp_io import CitraRGB, baca_bmp, tulis_bmp, clamp, histogram, gambar_histogram
+from bmp_io import CitraRGB, baca_bmp, clamp, simpan_hasil
 
 C = 60
 
@@ -14,5 +14,4 @@ for y in range(h):
         r, g, b = pixels[y][x]
         hasil[y][x] = (clamp(r + C, maks), clamp(g + C, maks), clamp(b + C, maks))
 citra_hasil = CitraRGB(w, h, hasil, maks)
-tulis_bmp("01_brightness.bmp", citra_hasil)
-gambar_histogram(histogram(citra_hasil), "01_brightness.bmp")
+simpan_hasil([("sample.bmp", citra)], [("brightness", citra_hasil)])

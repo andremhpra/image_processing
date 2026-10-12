@@ -1,12 +1,10 @@
 from bmp_io import (
     CitraGrayscale,
     baca_bmp,
-    tulis_bmp,
     konversi_citra_grayscale,
     clamp,
     konvolusi,
-    histogram,
-    gambar_histogram,
+    simpan_hasil,
 )
 
 KERNEL = [[0, 1 / 5, 0], [1 / 5, 1 / 5, 1 / 5], [0, 1 / 5, 0]]
@@ -24,5 +22,4 @@ for y in range(h):
     hasil.append(baris)
 
 citra_hasil = CitraGrayscale(w, h, hasil, maks)
-tulis_bmp("15_penghalusan.bmp", citra_hasil)
-gambar_histogram(histogram(citra_hasil), "15_penghalusan.bmp")
+simpan_hasil([("sample.bmp", citra)], [("penghalusan", citra_hasil)])

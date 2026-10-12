@@ -1,11 +1,9 @@
-from citra_io import baca, tulis
+from citra_io import baca, simpan
 from bmp_io import (
     CitraGrayscale,
     konversi_citra_grayscale,
     clamp,
     konvolusi,
-    histogram,
-    gambar_histogram,
 )
 
 ALPHA = 1.0
@@ -28,4 +26,4 @@ for y in range(h):
     hasil.append(baris)
 
 citra_hasil = CitraGrayscale(w, h, hasil, maks)
-tulis("1_blurry.bmp", citra_hasil)
+simpan("1_blurry.bmp", citra, citra_hasil)

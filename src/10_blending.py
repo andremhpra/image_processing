@@ -1,4 +1,4 @@
-from bmp_io import CitraRGB, baca_bmp, tulis_bmp, clamp, histogram, gambar_histogram
+from bmp_io import CitraRGB, baca_bmp, clamp, simpan_hasil
 
 citra_a = baca_bmp("kotak_A.bmp")
 citra_b = baca_bmp("kotak_B.bmp")
@@ -25,6 +25,7 @@ for y in range(ha):
         )
 
 citra_hasil = CitraRGB(wa, ha, hasil, maks)
-tulis_bmp("10_blend.bmp", citra_hasil)
 
-gambar_histogram(histogram(citra_hasil), "10_blend.bmp")
+simpan_hasil(
+    [("kotak_A.bmp", citra_a), ("kotak_B.bmp", citra_b)], [("blend", citra_hasil)]
+)

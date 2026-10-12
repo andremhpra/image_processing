@@ -1,5 +1,5 @@
 import math
-from bmp_io import CitraRGB, baca_bmp, tulis_bmp, histogram, gambar_histogram
+from bmp_io import CitraRGB, baca_bmp, simpan_hasil
 
 SUDUT = 30
 
@@ -20,12 +20,7 @@ for y in range(h):
         r180[h - 1 - y][w - 1 - x] = pixels[y][x]
 
 citra_r90 = CitraRGB(h, w, r90, maks)
-tulis_bmp("07_rotasi_90.bmp", citra_r90)
 citra_r180 = CitraRGB(w, h, r180, maks)
-tulis_bmp("07_rotasi_180.bmp", citra_r180)
-
-gambar_histogram(histogram(citra_r90), "07_rotasi_90.bmp")
-gambar_histogram(histogram(citra_r180), "07_rotasi_180.bmp")
 
 t = math.radians(SUDUT)
 c = math.cos(t)
@@ -46,6 +41,12 @@ for y in range(h):
             bebas[yb][xb] = pixels[y][x]
 
 citra_bebas = CitraRGB(wb, hb, bebas, maks)
-tulis_bmp("07_rotasi_bebas.bmp", citra_bebas)
 
-gambar_histogram(histogram(citra_bebas), "07_rotasi_bebas.bmp")
+simpan_hasil(
+    [("sample.bmp", citra)],
+    [
+        ("rotasi 90", citra_r90),
+        ("rotasi 180", citra_r180),
+        (f"rotasi {SUDUT}", citra_bebas),
+    ],
+)

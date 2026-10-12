@@ -1,4 +1,4 @@
-from bmp_io import CitraRGB, baca_bmp, tulis_bmp, clamp, histogram, gambar_histogram
+from bmp_io import CitraRGB, baca_bmp, clamp, simpan_hasil
 
 G = 1.8
 
@@ -19,5 +19,4 @@ for y in range(h):
             clamp(G * (b - P) + P, maks),
         )
 citra_hasil = CitraRGB(w, h, hasil, maks)
-tulis_bmp("02_kontras.bmp", citra_hasil)
-gambar_histogram(histogram(citra_hasil), "02_kontras.bmp")
+simpan_hasil([("sample.bmp", citra)], [("kontras", citra_hasil)])
